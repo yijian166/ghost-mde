@@ -4,6 +4,9 @@ import commonjs from 'rollup-plugin-commonjs';
 import livereload from 'rollup-plugin-livereload';
 import { terser } from 'rollup-plugin-terser';
 import rollup_start_dev from './rollup_start_dev';
+import postcss from 'rollup-plugin-postcss'
+// import { scss, coffeescript, pug } from 'svelte-preprocess'
+import autoPreprocess from 'svelte-preprocess';
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -17,6 +20,7 @@ export default {
 	},
 	plugins: [
 		svelte({
+			preprocess: autoPreprocess(),
 			// enable run-time checks when not in production
 			dev: !production,
 			// we'll extract any component CSS out into
@@ -24,6 +28,13 @@ export default {
 			css: css => {
 				css.write('public/bundle.css');
 			}
+		}),
+
+		postcss({
+			// modules: true,
+			plugins: [],
+			extract: true
+			// extensions: ['.css', '.less']
 		}),
 
 		// If you have external dependencies installed from
