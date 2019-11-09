@@ -7,6 +7,10 @@ import rollup_start_dev from './rollup_start_dev';
 import postcss from 'rollup-plugin-postcss'
 // import { scss, coffeescript, pug } from 'svelte-preprocess'
 import autoPreprocess from 'svelte-preprocess';
+import dev from 'rollup-plugin-dev'
+import replace from '@rollup/plugin-replace';
+import alias from '@rollup/plugin-alias';
+
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -50,15 +54,32 @@ export default {
 
 		// In dev mode, call `npm run start:dev` once
 		// the bundle has been generated
-		!production && rollup_start_dev,
+		// !production && rollup_start_dev,
 
 		// Watch the `public` directory and refresh the
 		// browser on changes when not in production
-		!production && livereload('public'),
+		// !production && livereload('public'),
+
+		dev({ 
+			proxy: { '/ghost/*': [
+				'https://hicc.me/ghost/', 
+				{ https: true }
+				] 
+			} ,
+			dirs: ['dist', 'lib','public'] 
+		}),
 
 		// If we're building for production (npm run build
 		// instead of npm run dev), minify
-		production && terser()
+		production && terser(),
+
+		replace({ __buildEnvIsProduction__: !!production }),
+
+		alias({
+			entries: {
+				'@api': './services/ghostAdminApi.js'
+			}
+		})
 	],
 	watch: {
 		clearScreen: false
