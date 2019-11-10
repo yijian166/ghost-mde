@@ -6,10 +6,11 @@ import { terser } from 'rollup-plugin-terser';
 import rollup_start_dev from './rollup_start_dev';
 import postcss from 'rollup-plugin-postcss'
 // import { scss, coffeescript, pug } from 'svelte-preprocess'
-import autoPreprocess from 'svelte-preprocess';
+import autoPreprocess, {less} from 'svelte-preprocess';
 import dev from 'rollup-plugin-dev'
 import replace from '@rollup/plugin-replace';
 import alias from '@rollup/plugin-alias';
+import path from 'path';
 
 
 const production = !process.env.ROLLUP_WATCH;
@@ -29,16 +30,16 @@ export default {
 			dev: !production,
 			// we'll extract any component CSS out into
 			// a separate file  better for performance
-			css: css => {
-				css.write('public/bundle.css');
-			}
+			// css: css => {
+			// 	css.write('public/bundle.css');
+			// }
 		}),
 
 		postcss({
 			// modules: true,
 			plugins: [],
-			extract: true
-			// extensions: ['.css', '.less']
+			extract: true,
+			extensions: ['.css', '.less']
 		}),
 
 		// If you have external dependencies installed from
@@ -77,7 +78,9 @@ export default {
 
 		alias({
 			entries: {
-				'@api': './services/ghostAdminApi.js'
+				'@api': path.resolve(__dirname,  './src/services/ghostAdminApi.js'),
+				'@request': path.resolve(__dirname,  './src/services/request.js'),
+				'@config': path.resolve(__dirname,  './src/services/config.js'),
 			}
 		})
 	],

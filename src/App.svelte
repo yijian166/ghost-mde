@@ -1,20 +1,23 @@
 <style type="text/less">
-	.box {
-		p {
-				border-bottom: 1px solid  red;
-		}
+	.container {
+		height: 100%;
+		display: flex;
+		flex-direction: column;
 	}
 </style>
-<!-- <style global type="text/less">
-  html, body {
-    height: 100%;
-  }
-</style>  -->
-<div class="box"><p>ss</p></div>
+
+<div class="container is-widescreen is-fullhd">
+	<div class="navbar"></div>
+	<Container {blogConfig}/>
+</div>
+
 
 <script>
-	import { onMount } from 'svelte';
-	import GhostAdminApi, { ISDEV } from '@api'
+
+	import { writable } from 'svelte/store';
+	import Container from './components/Container.svelte';
+
+	const count = writable(0);
 
 	const blogConfig = {
 		url: 'https://hicc.me',
@@ -22,14 +25,5 @@
 		version: "v3"
 	}
 
-	const api = new GhostAdminApi(blogConfig);
-
-	onMount(async () => {
-	
-		
-		const result = await api.getPosts();
-		console.log('--', result, ISDEV)
-
-	});
 	let name = 'world';
 </script>
