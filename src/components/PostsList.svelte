@@ -1,8 +1,11 @@
 <style type="text/less">
   div {
     height: 100%;
+    overflow: auto;
   }
-
+  ul {
+    
+  }
   li {
     padding: 10px;
     cursor: pointer;

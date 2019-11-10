@@ -3,6 +3,7 @@
 		flex: 1;
 		display: flex;
 		flex-direction: row;
+    overflow: hidden;
 	}
 	.gm-sidebar {
 		width: 300px;
@@ -18,7 +19,7 @@
 			<PostsList data={$postList} on:select="{onPostSelect}"/>
 		</div>
 		<div class="gm-content">
-			<PostDetail />
+			<PostDetail data={selectedPost} />
 		</div>
 </div>
 
@@ -30,9 +31,11 @@
   import { writable } from 'svelte/store';
 
   const postList = writable([]);
+  let selectedPost;
 
-  function onPostSelect(post) {
-    console.log('---', post);
+  function onPostSelect(data) {
+    console.log('---', data.detail);
+    selectedPost = data.detail;
   }
   
   onMount(async () => {

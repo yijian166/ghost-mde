@@ -20,7 +20,9 @@
   "dependencies": {
     "@tryghost/admin-api": "^1.0.0",
     "bulma": "^0.8.0",
+    "codemirror": "^5.49.2",
     "jsrsasign": "^8.0.12",
+    "simplemde": "^1.11.2",
     "sirv-cli": "^0.4.4"
   },
   "scripts": {
