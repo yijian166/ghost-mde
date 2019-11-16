@@ -42,7 +42,7 @@
     const api = new GhostAdminApi($$props.blogConfig);
     const { posts, meta } = await api.getPosts();
     postList.set(posts)
-		console.log('--', posts, meta)
+		console.log('---GhostAdminApi--', posts, meta)
 
 	});
 </script>

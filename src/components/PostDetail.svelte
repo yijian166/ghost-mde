@@ -1,45 +1,99 @@
 <style type="text/less">
-  div {
+  main {
     height: 100%;
     overflow: hidden;
-    padding-right: 20px;;
+    display: flex;
+    flex-direction: column;
   }
-  :global(.CodeMirror) {
-    height: calc(100% - 200px)
+  header {
+    height: 50px;
+    background-color: #3298dc;
+    padding-left: 20px;
+    input {
+      color: #fafafa;
+      font-size: 18px;
+      border: none;
+      height: 30px;
+      line-height: 30px;
+      box-sizing: border-box;
+      padding: 2px 0;
+      display: inline-block;
+      width: 100%;
+      background: transparent;
+      outline: none;
+      margin-top: 10px;
+    }
+  }
+  .gm-post-detail {
+    height: 100%;
+    flex: 1;
+    overflow: hidden;
+    padding-right: 20px;
+    padding-left: 20px;
+    padding-top: 20px;
+    display: flex;
+    flex-direction: column;
+
+  }
+  .gm-detail-info {
+    margin-bottom: 20px;
+  }
+  .gm-editor-box {
+    flex: 1;
+  }
+  .gm-detail-footer {
+    height: 100px;
   }
 </style>
-<div>
-  {$$props.data ? $$props.data.id:'' }
-  <textarea bind:this={textAreaElement} />
-</div>
-<script>
-  import SimpleMDE from 'simplemde'
-  import { onMount, afterUpdate } from 'svelte';
-  import 'simplemde/dist/simplemde.min.css'
-  import 'codemirror/lib/codemirror.css'
-  let textAreaElement;
-  let editor;
-  onMount(() => {
-    editor = new SimpleMDE({ element: textAreaElement, spellChecker: false });
-  });
+<main>
+  <header >
+    <input type="text" bind:value={title} />
+  </header>
+  <div class="gm-post-detail">
+    <div class="gm-editor-box">
+      <Editor {markdown} {topHeight} {bottomHeight}/>
+    </div>
+    <div class="gm-detail-footer">
+    </div>
+  </div>
+</main>
 
-  afterUpdate(() => {
+<script>
+  import { onMount, afterUpdate } from 'svelte';
+  import Editor from './Editor.svelte'
+  let title = '';
+  let markdown;
+  const topHeight = 50 + 80;
+  const bottomHeight = 100
+  
+  $: {
     try {
-      console.log('--update-', $$props.data)
-    if ($$props.data && typeof $$props.data === 'object' && $$props.data.mobiledoc) {
-      const { cards } = JSON.parse($$props.data.mobiledoc);
-      if (Array.isArray(cards) && cards.length) {
-        const [ [type, { markdown }] ] = cards;
-        console.log('--', type, markdown)
-        if (type === 'markdown') {
-          editor.value(markdown)
+      if ($$props.data && typeof $$props.data === 'object') {
+        const { mobiledoc = "", title: _title } = $$props.data;
+        title = _title;
+        const { cards } = JSON.parse(mobiledoc);
+        if (Array.isArray(cards) && cards.length) {
+          const [ [type, { markdown: _md }] ] = cards;
+          // console.log('--', type, markdown)
+          if (type === 'markdown') {
+            markdown = _md;
+          }
         }
+        // console.log('--update-', mobiledoc)
       }
-      console.log('--update-', mobiledoc)
-    }
+      // TODO: 提示不能解析为markdown的情况
     } catch (error) {
       
     }
+  }
+  
+  onMount(() => {
     
-  })
+  });
+
+  afterUpdate(() => {
+   
+    
+  });
+  
 </script>

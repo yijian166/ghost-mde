@@ -1,17 +1,14 @@
 <style type="text/less">
-	.container {
+	.gm-container {
 		height: 100%;
 		display: flex;
 		flex-direction: column;
 	}
 </style>
 
-<div class="container is-widescreen is-fullhd">
-	<div class="navbar"></div>
+<div class="gm-container">
 	<Container {blogConfig}/>
 </div>
-
-
 <script>
 
 	import { writable } from 'svelte/store';

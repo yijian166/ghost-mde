@@ -11,7 +11,8 @@ import dev from 'rollup-plugin-dev'
 import replace from '@rollup/plugin-replace';
 import alias from '@rollup/plugin-alias';
 import path from 'path';
-
+// import babel from 'rollup-plugin-babel';
+import babel from "@babel/core"
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -25,7 +26,12 @@ export default {
 	},
 	plugins: [
 		svelte({
-			preprocess: autoPreprocess(),
+			preprocess: {
+				...autoPreprocess(),
+				// script: ({ content }) => {
+				// 	return babel.transform(content, {});
+				// }
+			},
 			// enable run-time checks when not in production
 			dev: !production,
 			// we'll extract any component CSS out into
@@ -34,6 +40,12 @@ export default {
 			// 	css.write('public/bundle.css');
 			// }
 		}),
+
+		// babel({
+		// 	exclude: 'node_modules/**',
+		// 	runtimeHelpers: true,
+		// 	extensions: [ ".js", ".mjs", ".html"]   
+    // }),
 
 		postcss({
 			// modules: true,
@@ -82,7 +94,9 @@ export default {
 				'@request': path.resolve(__dirname,  './src/services/request.js'),
 				'@config': path.resolve(__dirname,  './src/services/config.js'),
 			}
-		})
+		}),
+
+		
 	],
 	watch: {
 		clearScreen: false
