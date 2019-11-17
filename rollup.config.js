@@ -91,6 +91,7 @@ export default {
 		alias({
 			entries: {
 				'@api': path.resolve(__dirname,  './src/services/ghostAdminApi.js'),
+				'@icon': path.resolve(__dirname,  './src/fontawesome-free-5.11.2-web/'),
 				'@request': path.resolve(__dirname,  './src/services/request.js'),
 				'@config': path.resolve(__dirname,  './src/services/config.js'),
 			}

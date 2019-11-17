@@ -9,6 +9,14 @@
     height: 50px;
     background-color: #3298dc;
     padding-left: 20px;
+    padding-right: 20px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    h1 {
+      flex: 1;
+      
+    }
     input {
       color: #fafafa;
       font-size: 18px;
@@ -22,6 +30,23 @@
       background: transparent;
       outline: none;
       margin-top: 10px;
+    }
+  }
+  .gm-post-detail-tools {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+
+
+    .icon {
+      cursor: pointer;
+      margin-left: 15px;
+      color: darken(#fff, 10%);
+
+      &:hover {
+        color: #fff;
+      }
     }
   }
   .gm-post-detail {
@@ -47,7 +72,15 @@
 </style>
 <main>
   <header >
-    <input type="text" bind:value={title} />
+    <h1>
+      <input type="text" bind:value={title} />
+    </h1>
+    <div class="gm-post-detail-tools">
+      <button class="button is-black is-small">publish</button>    
+      <span class="icon">
+        <i class="fas fa-cog"></i>
+      </span>
+    </div>
   </header>
   <div class="gm-post-detail">
     <div class="gm-editor-box">

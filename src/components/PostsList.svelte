@@ -16,6 +16,7 @@
   div {
     flex: 1;
     overflow: auto;
+    /* border-right: 1px solid #bbb; */
   }
   ul {
     
