@@ -80,14 +80,14 @@
 <main>
   <header >
     <h1>
-      {#if isEditing} 
+      {#if $isEditing} 
         <input type="text" bind:value={title} />
       {:else}
         {title}
       {/if}
     </h1>
     <div class="gm-post-detail-tools">
-      {#if isEditing} 
+      {#if $isEditing} 
         <!-- <button class="button is-black is-small">publish</button>     -->
         <div class="dropdown is-hoverable is-right" class:is-active={publihClicked} >
           <div class="dropdown-trigger">
@@ -106,7 +106,7 @@
               <a href="#" class="dropdown-item" class:is-active={publihClicked}>
                 Publish
               </a>
-              <a href="#" class="dropdown-item">
+              <a href="#" class="dropdown-item" on:click={cancelEdit}>
                 Cancel Edit
               </a>
             </div>
@@ -121,9 +121,9 @@
     </div>
   </header>
   <div class="gm-post-detail">
-      {#if isEditing} 
+      {#if $isEditing} 
         <div class="gm-editor-box">
-          <Editor {markdown} {topHeight} {bottomHeight}/>
+          <Editor {markdown} {topHeight} {bottomHeight} on:open="{onHasEditor}" on:close="{onEditorClose}"/>
         </div>
       {:else}
         <div class="gm-post-html">
@@ -139,20 +139,54 @@
   import { onMount, afterUpdate } from 'svelte';
   import Editor from './Editor.svelte'
   import PostPreview from './PostPreview.svelte'
+  import { writable, derived } from 'svelte/store';
+  import { isEditing } from '@store'
 
   // const postType = "scheduled" | "published" | "draft"
   // 编辑与否
-  let isEditing = false;
   let publihClicked = false;
   let title = '';
   let markdown;
   const topHeight = 50 + 20;
-  const bottomHeight = 0
+  const bottomHeight = 0;
+  let editor = writable();
 
-  $: postHTML = $$props.data && typeof $$props.data === 'object' ? $$props.data.html : ''
+  $: postHTML = $$props.data && typeof $$props.data === 'object' ? $$props.data.html : '';
+
+  const editorValue = derived(editor, ($editor, set) => {
+    console.log('--editor--', $editor)
+    if (!$editor){ return }
+    const interval = setInterval(() => {
+      console.log('--interval ing--', !!$editor, $editor.value().length)
+      $editor && set($editor.value() + new Date().getTime())
+    }, 1000);
+    return () => {
+      console.log('--clearInterval--')
+      interval && clearInterval(interval)
+    }
+  }, '');
+
+  const editorValueUnSub =  editorValue.subscribe(value=> {
+    console.log('--editorValue--', value.length)
+  })
   
   function tryEdit() {
     publihClicked = !publihClicked;
+  }
+  
+  function cancelEdit() {
+    //TODO: re confirm cancel Edit
+    publihClicked = false;
+    markdown = '';
+  }
+  
+  function onHasEditor(e) {
+    console.log('--onHasEditor--',e)
+    editor.set(e.detail);
+  }
+  function onEditorClose() {
+    console.log('--onEditorClose--',editor)
+    editor.set(null);
   }
 
   function doEdit() {
@@ -167,7 +201,7 @@
           // console.log('--', type, markdown)
           if (type === 'markdown') {
             markdown = _md;
-            isEditing = true;
+            isEditing.set(true);
           }
         }
         // console.log('--update-', mobiledoc)
@@ -176,10 +210,13 @@
     } catch (error) {
       
     }
+
   }
   
   onMount(() => {
-    
+    return () => {
+      editorValueUnSub()
+    }
   });
 
   afterUpdate(() => {

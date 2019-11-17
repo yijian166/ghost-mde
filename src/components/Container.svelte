@@ -35,13 +35,18 @@
   import PostDetail from './PostDetail.svelte'
   import GhostAdminApi from '@api';
   import { onMount } from 'svelte';
-  import { writable } from 'svelte/store';
+	import { writable } from 'svelte/store';
+	import { isEditing } from '@store';
 
   const postList = writable([]);
   let selectedPost;
 
   function onPostSelect(data) {
-    console.log('---', data.detail);
+		console.log('---onPostSelect--', data.detail, $isEditing);
+		if ($isEditing) {
+			console.warn('---isEditing--');//TODO:
+			return;
+		}
     selectedPost = data.detail;
   }
   

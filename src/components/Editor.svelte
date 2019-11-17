@@ -10,6 +10,9 @@
   import debounce from 'lodash/debounce';
   import 'simplemde/dist/simplemde.min.css'
   import 'codemirror/lib/codemirror.css'
+   import { createEventDispatcher } from 'svelte';
+  const dispatch = createEventDispatcher();
+
   let editorBoxElement;
   let textAreaElement;
   let editor;
@@ -331,8 +334,12 @@
       return null;
     }).filter(item => item);
     editor = new SimpleMDE({ element: textAreaElement, spellChecker: false, toolbar, autoDownloadFontAwesome: false });
+    dispatch('open', editor);
     setEditorSize()
     setMDValue()
+    return () => {
+      dispatch('close');
+    }
   });
 
   afterUpdate(() => {
