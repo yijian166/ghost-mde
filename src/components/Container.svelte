@@ -1,17 +1,24 @@
 <style type="text/less">
+ @sizeW: 300px;
 	.gm-body {
-		flex: 1;
+		/* flex: 1;
 		display: flex;
-		flex-direction: row;
+		flex-direction: row; */
     overflow: hidden;
+		padding-left: @sizeW;
+
 	}
 	.gm-sidebar {
+		position: absolute;
+		top: 0;
+		left:0;
 		width: 300px;
 		height: 100%;
 	}
 	.gm-content {
-		flex: 1;
+		/* flex: 1; */
 		height: 100%;
+		width: 100%
 	}
 </style>
 <div class="gm-body">

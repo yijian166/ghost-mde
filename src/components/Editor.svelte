@@ -270,7 +270,7 @@
     // console.warn('----setEditorSize', innerWidth, innerHeight, $$props.topHeight , $$props.bottomHeight);
     // return
     const editorW = innerWidth - 300 - 20 -20;
-    const editorH = innerHeight - 51 - 34 - ($$props.topHeight || 100) - ($$props.bottomHeight || 100); 
+    const editorH = innerHeight - 51 - 34 - ($$props.topHeight || 0) - ($$props.bottomHeight || 0); 
     if (editorBoxElement) {
       const _editorMirror = editorBoxElement.querySelector('.CodeMirror');
       console.log('---_editorMirror',_editorMirror, editorW)
