@@ -106,7 +106,7 @@
               <a href="#" class="dropdown-item" class:is-active={publihClicked}>
                 Publish
               </a>
-              <a href="#" class="dropdown-item" on:click={cancelEdit}>
+              <a href="#" class="dropdown-item" on:click|preventDefault={cancelEdit}>
                 Cancel Edit
               </a>
             </div>
@@ -123,7 +123,7 @@
   <div class="gm-post-detail">
       {#if $isEditing} 
         <div class="gm-editor-box">
-          <Editor {markdown} {topHeight} {bottomHeight} on:open="{onHasEditor}" on:close="{onEditorClose}"/>
+          <Editor {markdown} {topHeight} {bottomHeight} {fileUploadFun} on:open="{onHasEditor}" on:close="{onEditorClose}"/>
         </div>
       {:else}
         <div class="gm-post-html">
@@ -140,7 +140,7 @@
   import Editor from './Editor.svelte'
   import PostPreview from './PostPreview.svelte'
   import { writable, derived } from 'svelte/store';
-  import { isEditing } from '@store'
+  import { isEditing, ghostApiService } from '@store'
 
   // const postType = "scheduled" | "published" | "draft"
   // 编辑与否
@@ -157,8 +157,8 @@
     console.log('--editor--', $editor)
     if (!$editor){ return }
     const interval = setInterval(() => {
-      console.log('--interval ing--', !!$editor, $editor.value().length)
-      $editor && set($editor.value() + new Date().getTime())
+      // console.log('--interval ing--', !!$editor, $editor.value().length)
+      $editor && set($editor.value())
     }, 1000);
     return () => {
       console.log('--clearInterval--')
@@ -170,13 +170,12 @@
     console.log('--editorValue--', value.length)
   })
   
-  function tryEdit() {
-    publihClicked = !publihClicked;
-  }
   
   function cancelEdit() {
     //TODO: re confirm cancel Edit
-    publihClicked = false;
+    console.log('---cancelEdit---')
+    // publihClicked = false;
+    isEditing.set(false);
     markdown = '';
   }
   
@@ -211,6 +210,17 @@
       
     }
 
+  }
+
+  async function fileUploadFun(file) {
+    console.log('---fileUploadFun---', file)
+    let url = '';
+    if ($ghostApiService) {
+      url = await $ghostApiService.uploadImg(file);
+      console.log('---fileUploadFun upload ---', url)
+    }
+    // TODO: url empty message
+    return url
   }
   
   onMount(() => {

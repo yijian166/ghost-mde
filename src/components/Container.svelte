@@ -36,7 +36,7 @@
   import GhostAdminApi from '@api';
   import { onMount } from 'svelte';
 	import { writable } from 'svelte/store';
-	import { isEditing } from '@store';
+	import { isEditing, ghostApiService } from '@store';
 
   const postList = writable([]);
   let selectedPost;
@@ -48,13 +48,23 @@
 			return;
 		}
     selectedPost = data.detail;
-  }
-  
-  onMount(async () => {
-    const api = new GhostAdminApi($$props.blogConfig);
-    const { posts, meta } = await api.getPosts();
-    postList.set(posts)
+	}
+	
+	ghostApiService.subscribe(async api => {
+		console.log('---ghostApiService has value--', api)
+		if (!api) {
+			return;
+		}
+		const { posts, meta } = await api.getPosts();
+		postList.set(posts)
 		console.log('---GhostAdminApi--', posts, meta)
 
+	});
+  
+  onMount(async () => {
+		const api = new GhostAdminApi($$props.blogConfig);
+		ghostApiService.set(api);
+    
+	
 	});
 </script>

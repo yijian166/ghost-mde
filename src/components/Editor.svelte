@@ -3,6 +3,7 @@
 <div class="md-editor" bind:this={editorBoxElement}>
   <textarea bind:this={textAreaElement} />
 </div>
+<input bind:this={fileInput} type="file" accept="image/x-png,image/gif,image/jpeg" hidden/>
 <svelte:window bind:innerWidth={innerWidth} bind:innerHeight={innerHeight}/>
 <script>
   import SimpleMDE from 'simplemde'
@@ -15,6 +16,7 @@
 
   let editorBoxElement;
   let textAreaElement;
+  let fileInput;
   let editor;
   let innerWidth = 0;
   let innerHeight = 0;
@@ -151,24 +153,27 @@
     'choose-image': {
       name: 'choose-image',
       action(editor) {
-        if (!editor._fileInputEl) {
+        console.log('---', fileInput, typeof $$props.fileUploadFun)
+        if (!fileInput || typeof $$props.fileUploadFun !== 'function') {
           return false;
         }
-        const el = editor._fileInputEl;
+        const el = fileInput;
         el.addEventListener('change', onChange);
         el.click();
         async function onChange(e) {
+          el.removeEventListener('change', onChange);
           try {
             const target = (e).target;
             const files = target.files;
             if (files && files.length > 0) {
               const file = files[0];
-              const url = await editor._fileUploadFun(file); //TODO:
+              const url = await $$props.fileUploadFun(file); //TODO:
               const cm = editor.codemirror;
               const stat = editor.getState();
               editor._replaceSelection(cm, stat.image, ['![](', '#url#)'], url);
             }
           } catch (error) {
+            console.log('--choose image error---', error)
           }
         }
       },
@@ -351,5 +356,37 @@
       editor.value($$props.markdown)
     }
   }
+
+  SimpleMDE.prototype._replaceSelection = (cm, active, startEnd, url) => {
+      if (/editor-preview-active/.test(cm.getWrapperElement().lastChild.className)) { return }
+      let text;
+      let start = startEnd[0];
+      let end = startEnd[1];
+      let startPoint = cm.getCursor('start');
+      let endPoint = cm.getCursor('end');
+      if (url) {
+        end = end.replace('#url#', url);
+      }
+      if (active) {
+        text = cm.getLine(startPoint.line);
+        start = text.slice(0, startPoint.ch);
+        end = text.slice(startPoint.ch);
+        cm.replaceRange(start + end, {
+          line: startPoint.line,
+          ch: 0
+        });
+      } else {
+        text = cm.getSelection();
+        cm.replaceSelection(start + text + end);
+
+        startPoint.ch += start.length;
+        if (startPoint !== endPoint) {
+          endPoint.ch += start.length;
+        }
+      }
+      cm.setSelection(startPoint, endPoint);
+      cm.focus();
+    };
+
   
 </script>

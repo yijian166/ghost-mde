@@ -1,7 +1,7 @@
 import getToken from './tooken';
 import { ISDEV } from '@config';
 
-export default async function request(resourceType, blogConfig, {params = {},data = {}, method = "POST", header = {}} = {}) {
+export default async function request(resourceType, blogConfig, {params = {},data = {}, method = "POST", header = {}, formData} = {}) {
   let url = `${!ISDEV ? blogConfig.url : ''}/ghost/api/${blogConfig.version}/admin/${resourceType}/`;
   url += "?";
   url += Object.keys(params).reduce((list, key) => {
@@ -10,7 +10,7 @@ export default async function request(resourceType, blogConfig, {params = {},dat
   }, []).join('&');
   const result = await fetch(url,{
     method,
-    ...(method !== 'GET' ? {body: JSON.stringify(data)}:{}),
+    ...(method !== 'GET' ? {body: formData ? formData : JSON.stringify(data)}:{}),
     headers: new Headers({
       // 'Content-Type': 'application/json',
       ...header,
