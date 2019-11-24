@@ -103,7 +103,7 @@
               <a href="#" class="dropdown-item">
                 Save
               </a>
-              <a href="#" class="dropdown-item" class:is-active={publihClicked}>
+              <a href="#" class="dropdown-item" class:is-active={publihClicked} on:click|preventDefault={saveOrPublish}>
                 Publish
               </a>
               <a href="#" class="dropdown-item" on:click|preventDefault={cancelEdit}>
@@ -115,7 +115,7 @@
         <span class="icon">
           <i class="fas fa-cog"></i>
         </span>
-      {:else if $$props.data}
+      {:else if canEdit}
         <button class="button is-small" on:click={doEdit}>Edit</button>
       {/if}
     </div>
@@ -140,7 +140,7 @@
   import Editor from './Editor.svelte'
   import PostPreview from './PostPreview.svelte'
   import { writable, derived } from 'svelte/store';
-  import { isEditing, ghostApiService } from '@store'
+  import { isEditing, ghostApiService, postDetail } from '@store'
 
   // const postType = "scheduled" | "published" | "draft"
   // 编辑与否
@@ -150,15 +150,25 @@
   const topHeight = 50 + 20;
   const bottomHeight = 0;
   let editor = writable();
+  let selectedPost = null;
+  let isSending = false;
 
-  $: postHTML = $$props.data && typeof $$props.data === 'object' ? $$props.data.html : '';
+  // $: selectedPost = $postDetail ? $postDetail.post ? $postDetail.post: {} : {};
+  $: canEdit = $postDetail && $postDetail.post;
+
+  $: postHTML = selectedPost && typeof selectedPost === 'object' ? selectedPost.html : '';
 
   const editorValue = derived(editor, ($editor, set) => {
     console.log('--editor--', $editor)
     if (!$editor){ return }
+    
     const interval = setInterval(() => {
       // console.log('--interval ing--', !!$editor, $editor.value().length)
-      $editor && set($editor.value())
+      if ($editor) {
+        // if (selectedPost && selectedPost)
+        // TODO: 忽略第一次打开编辑器的触发
+        set($editor.value())
+      }
     }, 1000);
     return () => {
       console.log('--clearInterval--')
@@ -166,9 +176,26 @@
     }
   }, '');
 
-  const editorValueUnSub =  editorValue.subscribe(value=> {
+  const editorValueUnSub =  editorValue.subscribe(async value=> {
     console.log('--editorValue--', value.length)
-  })
+    if (!selectedPost || Object.keys(selectedPost).length === 0) {
+      // 新建文章
+    }
+    await saveOrPublish();
+  });
+
+  const postDetailUnSub =  postDetail.subscribe(value=> {
+    console.log('--editorValue--', value.isNew)
+    selectedPost = value.post;
+    if (value.post) {
+      const { mobiledoc = "", title: _title } = value.post;
+      title = _title;
+    }
+    isSending = false;
+    if (value.isNew) {
+      isEditing.set(true);
+    }
+  });
   
   
   function cancelEdit() {
@@ -191,25 +218,49 @@
   function doEdit() {
     
     try {
-      if ($$props.data && typeof $$props.data === 'object') {
-        const { mobiledoc = "", title: _title } = $$props.data;
+      if (selectedPost && typeof selectedPost === 'object') {
+        const { mobiledoc = "", title: _title } = selectedPost;
         title = _title;
         const { cards } = JSON.parse(mobiledoc);
         if (Array.isArray(cards) && cards.length) {
           const [ [type, { markdown: _md }] ] = cards;
           // console.log('--', type, markdown)
-          if (type === 'markdown') {
+          if (type === 'markdown' || type === 'card-markdown') {
             markdown = _md;
             isEditing.set(true);
+            return;
           }
         }
         // console.log('--update-', mobiledoc)
       }
       // TODO: 提示不能解析为markdown的情况
+      console.warn('---no support---')
     } catch (error) {
       
     }
 
+  }
+  
+  async function saveOrPublish() {
+    if (isSending || !$editor) {
+      return;
+    }
+    isSending = true;
+    const md = $editor.value();
+    const post = {
+      title,
+      id: selectedPost ?selectedPost.id: ''
+    }
+    const data = await $ghostApiService.savePost(post, md)
+    if (!data) {
+      // TODO: 处理接口失败的情况
+    }
+    if (!selectedPost) {
+      selectedPost = data
+    }
+    console.log('---saveOrPublish---', data);
+    isSending = false;
+    return data;
   }
 
   async function fileUploadFun(file) {
@@ -225,7 +276,8 @@
   
   onMount(() => {
     return () => {
-      editorValueUnSub()
+      editorValueUnSub();
+      postDetailUnSub();
     }
   });
 

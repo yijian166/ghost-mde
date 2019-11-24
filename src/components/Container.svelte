@@ -23,10 +23,10 @@
 </style>
 <div class="gm-body">
 		<div class="gm-sidebar">
-			<PostsList data={$postList} on:select="{onPostSelect}"/>
+			<PostsList data={$postList} />
 		</div>
 		<div class="gm-content">
-			<PostDetail data={selectedPost} />
+			<PostDetail />
 		</div>
 </div>
 
@@ -39,16 +39,6 @@
 	import { isEditing, ghostApiService } from '@store';
 
   const postList = writable([]);
-  let selectedPost;
-
-  function onPostSelect(data) {
-		console.log('---onPostSelect--', data.detail, $isEditing);
-		if ($isEditing) {
-			console.warn('---isEditing--');//TODO:
-			return;
-		}
-    selectedPost = data.detail;
-	}
 	
 	ghostApiService.subscribe(async api => {
 		console.log('---ghostApiService has value--', api)
@@ -61,10 +51,8 @@
 
 	});
   
-  onMount(async () => {
+  onMount(() => {
 		const api = new GhostAdminApi($$props.blogConfig);
 		ghostApiService.set(api);
-    
-	
 	});
 </script>
