@@ -20,8 +20,10 @@ export default class GhostAdminApi {
 	async savePost(post, markdown) {
 		try {
 			let url = 'posts';
+			let method = 'POST';
 			if (post.id) {
 				url += `/${post.id}`;
+				method = 'PUT'
 			}
 			delete post.id;
 			if (!post.status) {
@@ -46,7 +48,7 @@ export default class GhostAdminApi {
 			}
 			post.updated_at = new Date();
 			post.mobiledoc = JSON.stringify(mobiledoc)
-			const data = request(url, this.blogConfig,{data: {
+			const data = request(url, this.blogConfig,{method, data: {
 				posts: [post]
 			}})
 			if (typeof data === 'object' && Array.isArray(data.posts) && data.posts.length > 0) {

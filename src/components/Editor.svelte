@@ -274,7 +274,7 @@
     'preview'
   ];
 
-  const setEditorSize = debounce((innerWidth, innerHeight) => {
+  const setEditorSize = (innerWidth, innerHeight) => {
     // console.warn('----setEditorSize', innerWidth, innerHeight, $$props.topHeight , $$props.bottomHeight);
     // return
     const editorW = innerWidth - 300 - 20 -20;
@@ -287,10 +287,12 @@
          _editorMirror.style.height = editorH + 'px';
       }
     }
-  }, 1000);
+  };
+
+  const setEditorSizeWithDeBounce = debounce(setEditorSize, 1000)
   $: {
     console.log('----size update----')
-    setEditorSize(innerWidth, innerHeight)
+    setEditorSizeWithDeBounce(innerWidth, innerHeight)
   }
   onMount(() => {
     const toolbar = defaultToolBar.map(item => {
@@ -340,7 +342,7 @@
     }).filter(item => item);
     editor = new SimpleMDE({ element: textAreaElement, spellChecker: false, toolbar, autoDownloadFontAwesome: false });
     dispatch('open', editor);
-    setEditorSize()
+    setEditorSize(innerWidth, innerHeight)
     setMDValue()
     return () => {
       dispatch('close');

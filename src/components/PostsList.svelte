@@ -26,10 +26,24 @@
     color: #fff;
     cursor: pointer;
   }
-  div {
+  .gm-post-list {
     flex: 1;
     overflow: auto;
+    position: relative;
+    z-index: 1;
     /* border-right: 1px solid #bbb; */
+  }
+  .gm-post-isloading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    background-color: hsl(217, 71%, 53%);
+    opacity: 0.5;
+    color: #fff;
   }
   ul {
     padding-right: 10px;
@@ -58,13 +72,16 @@
       <i class="fas fa-plus"></i>
     </button>
   </h1>
-  <div >
+  <div class="gm-post-list">
+    {#if isLoading}
+      <span class="gm-post-isloading">Loading</span>
+    {/if}
     <ul>
-      {#each $$props.data as post}
+      {#each list as post}
         <li on:click="{() => selectPost(post)}" class:active={selectedPostId === post.id}>
           <h4>{post.title}</h4>
           <p>{post.excerpt}</p>
-          
+          
           {#if post.status === 'draft'}
             <span class="tag is-danger is-light">{post.status}</span>
           {/if}
@@ -76,7 +93,10 @@
 
 <script>
   import Box from './Box.svelte'
-  import { isEditing, postDetail } from '@store';
+  import { isEditing, postDetail, postList } from '@store';
+
+  $: list = Array.isArray($postList.list) ? $postList.list : [];
+  $: isLoading = !!$postList.isLoading;
 
   function newPost() {
     if ($isEditing) {return}

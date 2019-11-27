@@ -23,7 +23,7 @@
 </style>
 <div class="gm-body">
 		<div class="gm-sidebar">
-			<PostsList data={$postList} />
+			<PostsList />
 		</div>
 		<div class="gm-content">
 			<PostDetail />
@@ -36,20 +36,8 @@
   import GhostAdminApi from '@api';
   import { onMount } from 'svelte';
 	import { writable } from 'svelte/store';
-	import { isEditing, ghostApiService } from '@store';
-
-  const postList = writable([]);
+	import { ghostApiService } from '@store';
 	
-	ghostApiService.subscribe(async api => {
-		console.log('---ghostApiService has value--', api)
-		if (!api) {
-			return;
-		}
-		const { posts, meta } = await api.getPosts();
-		postList.set(posts)
-		console.log('---GhostAdminApi--', posts, meta)
-
-	});
   
   onMount(() => {
 		const api = new GhostAdminApi($$props.blogConfig);
