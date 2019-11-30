@@ -1,9 +1,9 @@
 import { writable, derived } from 'svelte/store';
 
-export const isEditing = writable(false);
 export const ghostApiService = writable(null);
 export const postDetail = writable({
-  isNew: false,
+  isSending: false,
+  isEditing:false,
   post: null
 })
 
@@ -34,7 +34,8 @@ ghostApiService.subscribe(async api => {
       }
     })
     const { posts, meta } = await api.getPosts();
-    console.log('---GhostAdminApi--', posts, meta)
+    const sitConfig = await api.getSiteConfig();
+    console.log('---GhostAdminApi--', posts, meta, sitConfig)
     postList.update(data => {
       return {
         ...data,

@@ -80,14 +80,14 @@
 <main>
   <header >
     <h1>
-      {#if $isEditing} 
+      {#if isEditing } 
         <input type="text" bind:value={title} />
       {:else}
         {title}
       {/if}
     </h1>
     <div class="gm-post-detail-tools">
-      {#if $isEditing} 
+      {#if isEditing } 
         <!-- <button class="button is-black is-small">publish</button>     -->
         <div class="dropdown is-hoverable is-right" class:is-active={publihClicked} >
           <div class="dropdown-trigger">
@@ -121,7 +121,7 @@
     </div>
   </header>
   <div class="gm-post-detail">
-      {#if $isEditing} 
+      {#if isEditing } 
         <div class="gm-editor-box">
           <Editor {markdown} {topHeight} {bottomHeight} {fileUploadFun} on:open="{onHasEditor}" on:close="{onEditorClose}"/>
         </div>
@@ -140,36 +140,41 @@
   import Editor from './Editor.svelte'
   import PostPreview from './PostPreview.svelte'
   import { writable, derived } from 'svelte/store';
-  import { isEditing, ghostApiService, postDetail } from '@store'
+  import { ghostApiService, postDetail, postList } from '@store'
+  import { EditorSaveInterval } from '@config';
 
   // const postType = "scheduled" | "published" | "draft"
   // 编辑与否
   let publihClicked = false;
   let title = '';
-  let markdown;
   const topHeight = 50 + 20;
   const bottomHeight = 0;
   let editor = writable();
-  let selectedPost = null;
-  let isSending = false;
+  let markdown = '';
 
   // $: selectedPost = $postDetail ? $postDetail.post ? $postDetail.post: {} : {};
+  $: selectedPost = $postDetail ? $postDetail.post : null;
   $: canEdit = $postDetail && $postDetail.post;
-
   $: postHTML = selectedPost && typeof selectedPost === 'object' ? selectedPost.html : '';
+  $: _markdown = selectedPost && typeof selectedPost === 'object' ? selectedPost.markdown : '';
+  $: supportMd = selectedPost && typeof selectedPost === 'object' ? !!selectedPost.supportMd : false; 
+  $: isEditing = $postDetail  && $postDetail.isEditing;
+  $: isSending = $postDetail  && $postDetail.isSending;
+  
 
   const editorValue = derived(editor, ($editor, set) => {
     console.log('--editor--', $editor)
     if (!$editor){ return }
-    
+    let isFirst = true;
     const interval = setInterval(() => {
-      // console.log('--interval ing--', !!$editor, $editor.value().length)
-      if ($editor) {
+      console.log('--interval ing--', !!$editor, $editor.value().length)
+      if ($editor && (!selectedPost || selectedPost && !isFirst) && !isSending) {
         // if (selectedPost && selectedPost)
         // TODO: 忽略第一次打开编辑器的触发
         set($editor.value())
       }
-    }, 1000);
+      isFirst = false;
+    }, EditorSaveInterval);
     return () => {
       console.log('--clearInterval--')
       interval && clearInterval(interval)
@@ -178,32 +183,22 @@
 
   const editorValueUnSub =  editorValue.subscribe(async value=> {
     console.log('--editorValue--', value.length)
-    if (!selectedPost || Object.keys(selectedPost).length === 0) {
-      // 新建文章
-    }
+    // if (!selectedPost || Object.keys(selectedPost).length === 0) {
+    //   // 新建文章
+    // }
     await saveOrPublish();
   });
-
-  const postDetailUnSub =  postDetail.subscribe(value=> {
-    console.log('--editorValue--', value.isNew)
-    selectedPost = value.post;
-    if (value.post) {
-      const { mobiledoc = "", title: _title } = value.post;
-      title = _title;
-    }
-    isSending = false;
-    if (value.isNew) {
-      isEditing.set(true);
-    }
-  });
-  
   
   function cancelEdit() {
     //TODO: re confirm cancel Edit
     console.log('---cancelEdit---')
     // publihClicked = false;
-    isEditing.set(false);
-    markdown = '';
+    postDetail.update(data => {
+      return {
+        ...data,
+        isEditing:false
+      }
+    })
   }
   
   function onHasEditor(e) {
@@ -216,50 +211,75 @@
   }
 
   function doEdit() {
-    
-    try {
-      if (selectedPost && typeof selectedPost === 'object') {
-        const { mobiledoc = "", title: _title } = selectedPost;
-        title = _title;
-        const { cards } = JSON.parse(mobiledoc);
-        if (Array.isArray(cards) && cards.length) {
-          const [ [type, { markdown: _md }] ] = cards;
-          // console.log('--', type, markdown)
-          if (type === 'markdown' || type === 'card-markdown') {
-            markdown = _md;
-            isEditing.set(true);
-            return;
-          }
-        }
-        // console.log('--update-', mobiledoc)
-      }
+    console.log('---doEdit---')
+    if (!supportMd) {
       // TODO: 提示不能解析为markdown的情况
       console.warn('---no support---')
-    } catch (error) {
-      
+      return;
     }
-
+    markdown = _markdown;
+    title = selectedPost ? selectedPost.title : '';
+    console.log('---doEdit---')
+    postDetail.update(data => {
+      return {
+        ...data,
+        isEditing:true
+      }
+    })
   }
   
   async function saveOrPublish() {
-    if (isSending || !$editor) {
+    if (!$editor) {
       return;
     }
-    isSending = true;
+    postDetail.update(data => {
+      return {
+        ...data,
+        isSending:true
+      }
+    })
     const md = $editor.value();
     const post = {
       title,
       id: selectedPost ?selectedPost.id: ''
     }
-    const data = await $ghostApiService.savePost(post, md)
+    const data = await $ghostApiService.savePost(post, md, selectedPost ? selectedPost.updated_at: '');
+    
     if (!data) {
       // TODO: 处理接口失败的情况
+
+      //TODO: 409 Conflict 
+      // 1. 每次更新的时候，传的是上次拿到的updated_at time
+      // 2. 如果接口冲突说明，说明别人比你拿到了更新的server端 updated_at time 这样也就是冲突了
+      // 3. 提示用户推出编辑，拉取一封最新的post信息
+      // 4. 因此这里是实际上是一种抢占式的，防冲突策略
     }
+
+    postDetail.update(value => {
+      return {
+        ...value,
+        isSending:false,
+        ...(!selectedPost ? {
+          post: data,
+        }: {
+          post: {
+            ...value.post,
+            updated_at: data.updated_at
+          }
+        })
+      }
+    });
     if (!selectedPost) {
-      selectedPost = data
+      // 表示是新增
+      postList.update(postListData => {
+        return {
+          ...postListData,
+          list: [data,...postListData.list]
+        }
+      })
     }
+    
     console.log('---saveOrPublish---', data);
-    isSending = false;
     return data;
   }
 
