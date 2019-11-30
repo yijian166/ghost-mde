@@ -14,6 +14,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     h1 {
       flex: 1;
       color: #fff;
@@ -59,7 +60,22 @@
     padding: @sizePadding 0 @sizePadding @sizePadding;
     display: flex;
     flex-direction: column;
-
+    position: relative;
+    z-index: 1;
+  }
+  .gm-editor-config {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background: #fff;
+    z-index: 2;
+    border-left: 1px solid rgba(0, 0, 0, 0.1);
+    /* box-shadow: -1px 3px 3px rgba(0, 0, 0, 0.2); */
+  }
+  .gm-post-box {
+    max-width: 800px;
+    height: 100%;
   }
   .gm-detail-info {
     margin-bottom: @sizePadding;
@@ -76,6 +92,9 @@
     padding-right: @sizePadding;
     overflow: auto;
   }
+  .icon {
+    user-select: none;
+  }
 </style>
 <main>
   <header >
@@ -87,40 +106,46 @@
       {/if}
     </h1>
     <div class="gm-post-detail-tools">
-      {#if isEditing } 
-        <!-- <button class="button is-black is-small">publish</button>     -->
-        <div class="dropdown is-hoverable is-right" class:is-active={publihClicked} >
-          <div class="dropdown-trigger">
-            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu">
-              <span>Publish</span>
-              <span class="icon is-small">
-                <i class="fas fa-angle-down" aria-hidden="true"></i>
-              </span>
-            </button>
-          </div>
-          <div class="dropdown-menu" id="dropdown-menu" role="menu">
-            <div class="dropdown-content">
-              <a href="#" class="dropdown-item">
-                Save
-              </a>
-              <a href="#" class="dropdown-item" class:is-active={publihClicked} on:click|preventDefault={saveOrPublish}>
-                Publish
-              </a>
-              <a href="#" class="dropdown-item" on:click|preventDefault={cancelEdit}>
-                Cancel Edit
-              </a>
+      {#if isEditing || selectedPost}
+        {#if isEditing } 
+          <!-- <button class="button is-black is-small">publish</button>     -->
+          <div class="dropdown is-hoverable is-right" class:is-active={publihClicked} >
+            <div class="dropdown-trigger">
+              <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu">
+                <span>Publish</span>
+                <span class="icon is-small">
+                  <i class="fas fa-angle-down" aria-hidden="true"></i>
+                </span>
+              </button>
+            </div>
+            <div class="dropdown-menu" id="dropdown-menu" role="menu">
+              <div class="dropdown-content">
+                <a href="#" class="dropdown-item">
+                  Save
+                </a>
+                <a href="#" class="dropdown-item" class:is-active={publihClicked} on:click|preventDefault={saveOrPublish}>
+                  Publish
+                </a>
+                <a href="#" class="dropdown-item" on:click|preventDefault={cancelEdit}>
+                  Cancel Edit
+                </a>
+              </div>
             </div>
           </div>
-        </div>
-        <span class="icon">
+        {:else if canEdit}
+          <!-- <button class="button is-small" on:click={doEdit}>Edit</button> -->
+          <span class="icon" on:click={doEdit}>
+            <i class="fas fa-pen-nib"></i>
+          </span>
+        {/if}
+        <span class="icon" on:click={configToggle}>
           <i class="fas fa-cog"></i>
         </span>
-      {:else if canEdit}
-        <button class="button is-small" on:click={doEdit}>Edit</button>
       {/if}
     </div>
   </header>
-  <div class="gm-post-detail">
+  <div class="gm-post-detail" >
+    <div class="gm-post-box" >
       {#if isEditing } 
         <div class="gm-editor-box">
           <Editor {markdown} {topHeight} {bottomHeight} {fileUploadFun} on:open="{onHasEditor}" on:close="{onEditorClose}"/>
@@ -130,6 +155,11 @@
           <PostPreview {postHTML} />
         </div>
       {/if}
+    </div>
+     
+    <div class="gm-editor-config" style="{configPageStyle}">
+      <PostConfig />
+    </div>
     <!-- <div class="gm-detail-footer">
     </div> -->
   </div>
@@ -139,6 +169,7 @@
   import { onMount, afterUpdate } from 'svelte';
   import Editor from './Editor.svelte'
   import PostPreview from './PostPreview.svelte'
+  import PostConfig from './PostConfig.svelte'
   import { writable, derived } from 'svelte/store';
   import { ghostApiService, postDetail, postList } from '@store'
   import { EditorSaveInterval } from '@config';
@@ -148,6 +179,8 @@
   let publihClicked = false;
   let title = '';
   const topHeight = 50 + 20;
+  const configWidth = 320;
+  const maxEditorWidth = 800;
   const bottomHeight = 0;
   let editor = writable();
   let markdown = '';
@@ -160,6 +193,11 @@
   $: supportMd = selectedPost && typeof selectedPost === 'object' ? !!selectedPost.supportMd : false; 
   $: isEditing = $postDetail  && $postDetail.isEditing;
   $: isSending = $postDetail  && $postDetail.isSending;
+  $: isConfiging = $postDetail  && $postDetail.isConfiging;
+
+  $: configPageStyle = `width:${configWidth}px;right: ${isConfiging ? 0:-configWidth}px`
+
+  // TODO: feature_image
   
 
   const editorValue = derived(editor, ($editor, set) => {
@@ -197,6 +235,15 @@
       return {
         ...data,
         isEditing:false
+      }
+    })
+  }
+
+  function configToggle() {
+    postDetail.update(data => {
+      return {
+        ...data,
+        isConfiging: !data.isConfiging
       }
     })
   }

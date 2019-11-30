@@ -14,6 +14,7 @@
     border-right: 1px solid #bbb;
     position: relative;
     padding-right: 50px;;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2)
   }
   .add-btn {
     position: absolute;
@@ -88,6 +89,14 @@
       opacity: 0.7;
     }
   }
+  .gm-footer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    padding-bottom: 30px;
+  }
 </style>
 <aside>
   <h1 class="haeder">
@@ -118,30 +127,83 @@
         </li>
       {/each}
     </ul>
+    <div class="gm-footer">
+      {#if hasMore}
+        <button class="button is-white" class:is-loading={isLoading} on:click={doLoadMore}>Load More</button>
+      {:else if list.length > 0}
+        <button class="button is-white" disabled>No More</button>
+      {/if}
+    </div>
   </div>
 </aside>
 
 <script>
   import Box from './Box.svelte'
-  import { postDetail, postList, ghostApiService } from '@store';
+  import { initPostDetail, postDetail, postList, ghostApiService } from '@store';
+  import { writable, get } from 'svelte/store';
 
   $: list = Array.isArray($postList.list) ? $postList.list : [];
   $: isLoading = !!$postList.isLoading;
+  $: totalCount = $postList ? $postList.total : 0;
+  $: hasMore = totalCount > list.length;
   $: isEditing = postDetail && postDetail.isEditing;
+  $:selectedPostId = $postDetail ? $postDetail.post ? $postDetail.post.id:'':'';
 
   function newPost() {
     if (isEditing) {return}
     postDetail.set({
+      ...initPostDetail,
       isEditing: true,
-      post: null
     })
   }
   function selectPost(post) {
     if (isEditing) {return}
     postDetail.set({
+      ...initPostDetail,
       post: post
     })
   }
+
+  async function doLoadMore() {
+    const {page, limit} = get(postList);
+    getList($ghostApiService, page+1, limit, true)
+  }
+
+  async function getList(api, page, limit, loadMore = false) {
+    console.log('---ghostApiService has value--', api)
+    if (!api) {
+      postList.update(data => {
+        return {
+          ...data,
+          list: [],
+        }
+      })
+    } else {
+      postList.update(data => {
+        return {
+          ...data,
+          isLoading: true,
+        }
+      });
+      const { posts, total } = await api.getPosts(page, limit);
+      const sitConfig = await api.getSiteConfig();
+      console.log('---GhostAdminApi--', posts, total, sitConfig)
+      postList.update(data => {
+        return {
+          ...data,
+          total,
+          page,
+          list: data.list.concat(posts) ,
+          isLoading: false
+        }
+      })
+    }
+  }
+
+  ghostApiService.subscribe(async api => {
+    const {page, limit} = get(postList);
+    getList(api, page, limit)
+  });
 
   async function del(id) {
     const isOk = await $ghostApiService.delPost(id);
@@ -166,6 +228,6 @@
     }
   }
 
-  $:selectedPostId = $postDetail ? $postDetail.post ? $postDetail.post.id:'':'';
+
   
 </script>

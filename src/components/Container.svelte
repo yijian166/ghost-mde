@@ -6,6 +6,7 @@
 		flex-direction: row; */
     overflow: hidden;
 		padding-left: @sizeW;
+		height: 100%;;
 
 	}
 	.gm-sidebar {

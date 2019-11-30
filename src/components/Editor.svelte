@@ -11,7 +11,7 @@
   import debounce from 'lodash/debounce';
   import 'simplemde/dist/simplemde.min.css'
   import 'codemirror/lib/codemirror.css'
-   import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
 
   let editorBoxElement;
@@ -20,6 +20,7 @@
   let editor;
   let innerWidth = 0;
   let innerHeight = 0;
+  
 
   const ToolBarFuncs = ['toggleBold',
     'toggleItalic',
@@ -277,11 +278,13 @@
   const setEditorSize = (innerWidth, innerHeight) => {
     // console.warn('----setEditorSize', innerWidth, innerHeight, $$props.topHeight , $$props.bottomHeight);
     // return
-    const editorW = innerWidth - 300 - 20 -20;
+    let editorW = 0//innerWidth - 300 - 20 - 20 - ($$props.rightWidth || 0);
     const editorH = innerHeight - 51 - 34 - ($$props.topHeight || 0) - ($$props.bottomHeight || 0); 
     if (editorBoxElement) {
+      const elSizeInfo = editorBoxElement.getBoundingClientRect();
+      editorW = elSizeInfo.width;
       const _editorMirror = editorBoxElement.querySelector('.CodeMirror');
-      console.log('---_editorMirror',_editorMirror, editorW)
+      console.log('---_editorMirror',_editorMirror, editorW, editorBoxElement.getBoundingClientRect())
       if (_editorMirror) {
         _editorMirror.style.width = editorW + 'px';
          _editorMirror.style.height = editorH + 'px';

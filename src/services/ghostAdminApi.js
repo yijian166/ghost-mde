@@ -43,12 +43,13 @@ export default class GhostAdminApi {
 		return data;
 	}
 
-	async getPosts() {
-			const { posts, meta } = await request('posts', this.blogConfig, {method: 'GET', params:{
-				formats: ['html', 'mobiledoc']
+	async getPosts(page, limit) {
+			const { posts, meta: {pagination} } = await request('posts', this.blogConfig, {method: 'GET', params:{
+				formats: ['html', 'mobiledoc'],
+				page, limit
 			}})
 			return {
-				meta,
+				...pagination,
 				posts: (Array.isArray(posts) ? posts: []).map(item => {
 					// const date = moment(item.updated_at);
 					// console.log('===', date, date.utcOffset())
