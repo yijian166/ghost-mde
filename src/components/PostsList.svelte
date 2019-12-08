@@ -55,6 +55,7 @@
     border-right: 4px solid transparent;
     position: relative;
     z-index: 1;
+    margin-bottom: 10px;
 
     padding-right: 25px;
 
@@ -69,11 +70,19 @@
       border-right-color: hsl(217, 71%, 53%);
       /* color: #fff; */
     }
+    .title {
+      margin-bottom: 5px;
+    }
 
     p {
-      overflow: hidden;
+      /* overflow: hidden;
       white-space: nowrap;
-      text-overflow: ellipsis;
+      text-overflow: ellipsis; */
+      overflow: hidden; 
+      text-overflow:ellipsis; 
+      display: -webkit-box; 
+      -webkit-line-clamp:2; 
+      -webkit-box-orient:vertical; 
     }
   }
   .post-tool {
@@ -97,6 +106,15 @@
     height: 40px;
     padding-bottom: 30px;
   }
+  .gm-post-others {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .gm-post-ptime {
+    font-size: 12px;
+  }
 </style>
 <aside>
   <h1 class="haeder">
@@ -112,15 +130,27 @@
     <ul>
       {#each list as post}
         <li on:click="{() => selectPost(post)}" class:active={selectedPostId === post.id}>
-          <h4>{post.title}</h4>
+          <h5 class="title is-5">{post.title}</h5>
           <p>{post.excerpt}</p>
-          
-          {#if post.status === 'draft'}
           <!-- ellipsis-v -->
-            <span class="tag is-danger is-light">{post.status}</span>
-          {/if}
+          <div class="gm-post-others">
+            <span 
+              class="tag  is-light" 
+              class:is-danger={post.status === postStatus.draft} 
+              class:is-success={post.status === postStatus.published}
+              class:is-info={post.status === postStatus.scheduled}
+            >
+              {post.status}
+            </span>
+            {#if post.status === postStatus.scheduled} 
+            <span class="gm-post-ptime">
+              {post.publishedTime}
+            </span>
+            {/if}
+          </div>
+          
           <div class="post-tool">
-            <span class="icon is-small" on:click|preventDefault={() => del(post.id)}>
+            <span class="icon is-small" on:click|stopPropagation={() => del(post.id)}>
               <i class="fas fa-trash-alt" aria-hidden="true"></i>
             </span>
           </div>
@@ -147,7 +177,8 @@
   $: totalCount = $postList ? $postList.total : 0;
   $: hasMore = totalCount > list.length;
   $: isEditing = postDetail && postDetail.isEditing;
-  $:selectedPostId = $postDetail ? $postDetail.post ? $postDetail.post.id:'':'';
+  $: selectedPostId = $postDetail ? $postDetail.post ? $postDetail.post.id:'':'';
+  $: postStatus = $ghostApiService ? $ghostApiService.postStatus : {};
 
   function newPost() {
     if (isEditing) {return}

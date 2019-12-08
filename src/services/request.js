@@ -12,7 +12,7 @@ export default async function request(resourceType, blogConfig, {params = {},dat
     method,
     ...(method !== 'GET' && method !== 'DELETE' ? {body: formData ? formData : JSON.stringify(data)}:{}),
     headers: new Headers({
-      ...(resourceType.includes('images') ? {}:{'Content-Type': 'application/json; charset=utf-8'}),
+      ...(resourceType === 'images/upload' ? {}:{'Content-Type': 'application/json; charset=utf-8'}),
       ...header,
       Authorization: `Ghost ${getToken(blogConfig.key, blogConfig.version)}`
     })

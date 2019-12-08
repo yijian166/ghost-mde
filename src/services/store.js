@@ -4,7 +4,8 @@ export const ghostApiService = writable(null);
 export const initPostDetail = {
   isSending: false,
   isEditing: false,
-  isConfiging: true,
+  isConfiging: false,
+  isPublishing: false,
   post: null
 };
 export const postDetail = writable(initPostDetail)
@@ -18,3 +19,6 @@ export const postList = writable({
   page: 1,
   limit: 20
 });
+
+
+export const editorInitValue = writable('')

@@ -8,6 +8,7 @@
 <script>
   import SimpleMDE from 'simplemde'
   import { onMount, afterUpdate } from 'svelte';
+  import { editorInitValue } from '@store'
   import debounce from 'lodash/debounce';
   import 'simplemde/dist/simplemde.min.css'
   import 'codemirror/lib/codemirror.css'
@@ -20,7 +21,6 @@
   let editor;
   let innerWidth = 0;
   let innerHeight = 0;
-  
 
   const ToolBarFuncs = ['toggleBold',
     'toggleItalic',
@@ -297,6 +297,14 @@
     console.log('----size update----')
     setEditorSizeWithDeBounce(innerWidth, innerHeight)
   }
+
+  const valueUnSub = editorInitValue.subscribe(value => {
+    console.warn('---editorInitValue subscribe---', value)
+    if (editor) {
+      editor.value(value)
+    }
+  })
+
   onMount(() => {
     const toolbar = defaultToolBar.map(item => {
       if (typeof item === 'string') {
@@ -346,21 +354,18 @@
     editor = new SimpleMDE({ element: textAreaElement, spellChecker: false, toolbar, autoDownloadFontAwesome: false });
     dispatch('open', editor);
     setEditorSize(innerWidth, innerHeight)
-    setMDValue()
+    // setMDValue()
     return () => {
       dispatch('close');
+      valueUnSub();
     }
   });
 
-  afterUpdate(() => {
-    setMDValue()
-  });
+  // afterUpdate(() => {
+  //   console.warn('---md editor afterupdate ---', $$props)
+  //   setMDValue()
+  // });
 
-  function setMDValue() {
-    if ($$props.markdown && editor) {
-      editor.value($$props.markdown)
-    }
-  }
 
   SimpleMDE.prototype._replaceSelection = (cm, active, startEnd, url) => {
       if (/editor-preview-active/.test(cm.getWrapperElement().lastChild.className)) { return }

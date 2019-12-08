@@ -1,13 +1,22 @@
 <style type="text/less">
   @sizePadding: 20px;
+  @topH: 50px;
   main {
     height: 100%;
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
+    /* display: flex;
+    flex-direction: column; */
+    position: relative;
+    z-index: 1;
+    padding-top: @topH;
   }
   header {
-    height: 50px;
+    position: absolute;
+    z-index: 2;;
+    top: 0;
+    left: 0;
+    right:0;
+    height: @topH;
     background-color: #3298dc;
     padding-left: @sizePadding;
     padding-right: @sizePadding;
@@ -20,7 +29,7 @@
       color: #fff;
       font-size: 18px;
     }
-    input {
+    .gm-title-input {
       color: #fafafa;
       font-size: 18px;
       border: none;
@@ -43,11 +52,11 @@
     padding-left: @sizePadding;
 
 
-    .icon {
+    .gm-icon {
       cursor: pointer;
       margin-left: 15px;
       color: darken(#fff, 5%);
-
+      user-select: none;
       &:hover {
         color: #fff;
       }
@@ -92,54 +101,29 @@
     padding-right: @sizePadding;
     overflow: auto;
   }
-  .icon {
-    user-select: none;
-  }
+
+
 </style>
 <main>
   <header >
     <h1>
       {#if isEditing } 
-        <input type="text" bind:value={title} />
+        <input type="text" bind:value={title} class="gm-title-input" />
       {:else}
-        {title}
+        {postTitle}
       {/if}
     </h1>
     <div class="gm-post-detail-tools">
-      {#if isEditing || selectedPost}
-        {#if isEditing } 
-          <!-- <button class="button is-black is-small">publish</button>     -->
-          <div class="dropdown is-hoverable is-right" class:is-active={publihClicked} >
-            <div class="dropdown-trigger">
-              <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu">
-                <span>Publish</span>
-                <span class="icon is-small">
-                  <i class="fas fa-angle-down" aria-hidden="true"></i>
-                </span>
-              </button>
-            </div>
-            <div class="dropdown-menu" id="dropdown-menu" role="menu">
-              <div class="dropdown-content">
-                <a href="#" class="dropdown-item">
-                  Save
-                </a>
-                <a href="#" class="dropdown-item" class:is-active={publihClicked} on:click|preventDefault={saveOrPublish}>
-                  Publish
-                </a>
-                <a href="#" class="dropdown-item" on:click|preventDefault={cancelEdit}>
-                  Cancel Edit
-                </a>
-              </div>
-            </div>
-          </div>
-        {:else if canEdit}
-          <!-- <button class="button is-small" on:click={doEdit}>Edit</button> -->
-          <span class="icon" on:click={doEdit}>
-            <i class="fas fa-pen-nib"></i>
-          </span>
-        {/if}
-        <span class="icon" on:click={configToggle}>
+      {#if isEditing } 
+        <!-- <button class="button is-black is-small">publish</button>     -->
+        <PublishBtn value={postStatus} {isSending} {isPublishing} {publishedTime} on:openToggle={publishPanelToggle} on:doPublish={doPublish}/>
+        <span class="icon gm-icon" on:click={configToggle}>
           <i class="fas fa-cog"></i>
+        </span>
+      {:else if canEdit}
+        <!-- <button class="button is-small" on:click={doEdit}>Edit</button> -->
+        <span class="icon gm-icon" on:click={doEdit}>
+          <i class="fas fa-pen-nib"></i>
         </span>
       {/if}
     </div>
@@ -148,7 +132,7 @@
     <div class="gm-post-box" >
       {#if isEditing } 
         <div class="gm-editor-box">
-          <Editor {markdown} {topHeight} {bottomHeight} {fileUploadFun} on:open="{onHasEditor}" on:close="{onEditorClose}"/>
+          <Editor {topHeight} {bottomHeight} {fileUploadFun} on:open="{onHasEditor}" on:close="{onEditorClose}"/>
         </div>
       {:else}
         <div class="gm-post-html">
@@ -158,7 +142,7 @@
     </div>
      
     <div class="gm-editor-config" style="{configPageStyle}">
-      <PostConfig />
+      <PostConfig on:change={saveOrPublishWithDebounce} />
     </div>
     <!-- <div class="gm-detail-footer">
     </div> -->
@@ -170,9 +154,12 @@
   import Editor from './Editor.svelte'
   import PostPreview from './PostPreview.svelte'
   import PostConfig from './PostConfig.svelte'
+  import PublishBtn from './PublishBtn.svelte'
   import { writable, derived } from 'svelte/store';
-  import { ghostApiService, postDetail, postList } from '@store'
-  import { EditorSaveInterval } from '@config';
+  import { ghostApiService, postDetail, postList, editorInitValue } from '@store'
+  import { EditorSaveInterval, handlePost } from '@config';
+  import debounce from 'lodash/debounce';
+  import pick from 'lodash/pick';
 
   // const postType = "scheduled" | "published" | "draft"
   // 编辑与否
@@ -183,33 +170,44 @@
   const maxEditorWidth = 800;
   const bottomHeight = 0;
   let editor = writable();
-  let markdown = '';
+  const supportEditKeys = ['id', 'feature_image', 'slug', 'updated_at', 'status']
 
   // $: selectedPost = $postDetail ? $postDetail.post ? $postDetail.post: {} : {};
   $: selectedPost = $postDetail ? $postDetail.post : null;
   $: canEdit = $postDetail && $postDetail.post;
   $: postHTML = selectedPost && typeof selectedPost === 'object' ? selectedPost.html : '';
+  $: postTitle = selectedPost && typeof selectedPost === 'object' ? selectedPost.title : '';
+  $: publishedTime = selectedPost && typeof selectedPost === 'object' ? selectedPost.published_at : '';
   $: _markdown = selectedPost && typeof selectedPost === 'object' ? selectedPost.markdown : '';
   $: supportMd = selectedPost && typeof selectedPost === 'object' ? !!selectedPost.supportMd : false; 
   $: isEditing = $postDetail  && $postDetail.isEditing;
   $: isSending = $postDetail  && $postDetail.isSending;
   $: isConfiging = $postDetail  && $postDetail.isConfiging;
-
+  $: isPublishing = $postDetail  && $postDetail.isPublishing;
   $: configPageStyle = `width:${configWidth}px;right: ${isConfiging ? 0:-configWidth}px`
+  $: postStatus = selectedPost ? selectedPost.status : 'draft';
+  $: isDraft = !selectedPost || $ghostApiService && selectedPost.status === $ghostApiService.postStatus.draft ;
+  // $: isScheduled = selectedPost && $ghostApiService && selectedPost.status === $ghostApiService.postStatus.scheduled ;
+  // $: isPublished = selectedPost && $ghostApiService && selectedPost.status === $ghostApiService.postStatus.published ;
 
-  // TODO: feature_image
-  
+
+  const saveOrPublishWithDebounce = debounce(saveOrPublish, 1000 * 10);
+
 
   const editorValue = derived(editor, ($editor, set) => {
     console.log('--editor--', $editor)
     if (!$editor){ return }
     let isFirst = true;
     const interval = setInterval(() => {
-      console.log('--interval ing--', !!$editor, $editor.value().length)
+      // console.log('--interval ing--', !!$editor, $editor.value().length)
       if ($editor && (!selectedPost || selectedPost && !isFirst) && !isSending) {
-        // if (selectedPost && selectedPost)
-        // TODO: 忽略第一次打开编辑器的触发
-        set($editor.value())
+        if (isDraft) {
+          const value  = $editor.value();
+          console.log('--- auto saving ---')
+          set(value)
+        } else {
+          console.log('--- not draft --- no auto saving')
+        }
       }
       isFirst = false;
     }, EditorSaveInterval);
@@ -221,11 +219,34 @@
 
   const editorValueUnSub =  editorValue.subscribe(async value=> {
     console.log('--editorValue--', value.length)
-    // if (!selectedPost || Object.keys(selectedPost).length === 0) {
-    //   // 新建文章
-    // }
-    await saveOrPublish();
+    await saveOrPublishWithDebounce();
   });
+
+  function publishPanelToggle(e = {}) {
+    const isPublishing = e.detail ? !e.detail : true
+    postDetail.update(data => {
+      return {
+        ...data,
+        isPublishing
+      }
+    })
+  }
+  async function doPublish(e) {
+    if (!$ghostApiService) {return}
+    try {
+      const {status, time, changed} = e.detail;
+      console.log('---doPublish---', status, time, changed)
+      if (changed || status === $ghostApiService.postStatus.scheduled && time) {
+        console.log('--- do publish---')
+        await saveOrPublish(status, time)
+      }
+    } catch (error) {
+      console.log('--- do publish error---', error)
+    } finally {
+      publishPanelToggle({detail: true})
+    }
+    
+  }
   
   function cancelEdit() {
     //TODO: re confirm cancel Edit
@@ -251,6 +272,7 @@
   function onHasEditor(e) {
     console.log('--onHasEditor--',e)
     editor.set(e.detail);
+    editorInitValue.set(_markdown)
   }
   function onEditorClose() {
     console.log('--onEditorClose--',editor)
@@ -264,7 +286,7 @@
       console.warn('---no support---')
       return;
     }
-    markdown = _markdown;
+    
     title = selectedPost ? selectedPost.title : '';
     console.log('---doEdit---')
     postDetail.update(data => {
@@ -275,23 +297,27 @@
     })
   }
   
-  async function saveOrPublish() {
+  async function saveOrPublish(toStatus, published_at) {
     if (!$editor) {
       return;
     }
     postDetail.update(data => {
       return {
         ...data,
-        isSending:true
+        isSending:true,
       }
     })
     const md = $editor.value();
+    const status = toStatus ? toStatus : selectedPost.status;
     const post = {
       title,
-      id: selectedPost ?selectedPost.id: ''
+      ...pick(selectedPost || {}, supportEditKeys),
+      status,
+      ...(status === $ghostApiService.postStatus.scheduled ? {published_at: new Date(published_at)}:{}) // scheduled 情况下， published_at 应该需要存在
     }
-    const data = await $ghostApiService.savePost(post, md, selectedPost ? selectedPost.updated_at: '');
-    
+    console.log('---saveOrPublish start api call----')
+    const data = await $ghostApiService.savePost(post, md);
+    const newPost = handlePost(data);
     if (!data) {
       // TODO: 处理接口失败的情况
 
@@ -307,27 +333,32 @@
         ...value,
         isSending:false,
         ...(!selectedPost ? {
-          post: data,
+          post: newPost,
         }: {
           post: {
             ...value.post,
-            updated_at: data.updated_at
+            ...pick(newPost, supportEditKeys.concat(['html']))
           }
         })
       }
     });
-    if (!selectedPost) {
-      // 表示是新增
-      postList.update(postListData => {
-        return {
-          ...postListData,
-          list: [data,...postListData.list]
-        }
-      })
-    }
     
-    console.log('---saveOrPublish---', data);
-    return data;
+    postList.update(postListData => {
+      const list = selectedPost ? postListData.list.map(item => {
+        if (item.id === newPost.id) {
+          return newPost
+        }
+        return {...item}
+      }):  [newPost,...postListData.list]
+      console.log('---postList.update---', list)
+      
+      return {
+        ...postListData,
+        list
+      }
+    })
+    console.log('---saveOrPublish---', newPost);
+    return newPost;
   }
 
   async function fileUploadFun(file) {

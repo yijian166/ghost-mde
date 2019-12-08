@@ -1,4 +1,5 @@
 import request from '@request';
+import {PostStatus, handlePost} from '@config'
 // import moment from 'moment'
 // import dayjs from 'dayjs'
 // import utc from 'dayjs/plugin/utc'
@@ -31,11 +32,7 @@ export default class GhostAdminApi {
 
 	constructor(blogConfig) {
 		this.blogConfig = blogConfig;
-		this.postStatus = {
-			scheduled: "scheduled",
-			published: "published",
-			draft: "draft"
-		}
+		this.postStatus = PostStatus;
 	}
 
 	async getSiteConfig() {
@@ -50,27 +47,7 @@ export default class GhostAdminApi {
 			}})
 			return {
 				...pagination,
-				posts: (Array.isArray(posts) ? posts: []).map(item => {
-					// const date = moment(item.updated_at);
-					// console.log('===', date, date.utcOffset())
-					let markdown = '';
-					let supportMd = false;
-					if (item && typeof item === 'object') {
-						const { mobiledoc = "" } = item;
-						const { cards } = JSON.parse(mobiledoc);
-						if (Array.isArray(cards) && cards.length) {
-							const [ [type, { markdown: _md }] ] = cards;
-							// console.log('--', type, markdown)
-							if (type === 'markdown' || type === 'card-markdown') {
-								markdown = _md;
-								supportMd = true;
-							}
-						}
-					}
-					item.markdown = markdown;
-					item.supportMd = supportMd;
-					return item;
-				})
+				posts: (Array.isArray(posts) ? posts: []).map(item => handlePost(item))
 			};
 	}
 
@@ -85,18 +62,15 @@ export default class GhostAdminApi {
 		}
 	}
 
-	async savePost(post, markdown, updated_at) {
+	async savePost(post, markdown) {
 		try {
 			let url = 'posts';
 			let method = 'POST';
 			if (post.id) {
 				url += `/${post.id}`;
 				method = 'PUT';
-				// const date = new Date()
-				// post.updated_at = date//date.toIsoString2(); 2019-11-30T06:49:40.000Z
-				// let time = new Date().toISOString();
+				// const time = new Date().toISOString();
 				// post.updated_at = time.slice(0, time.lastIndexOf('.')) + '.000Z'
-				post.updated_at = updated_at;
 			}else {
 				delete post.updated_at
 			}
@@ -126,10 +100,18 @@ export default class GhostAdminApi {
 			const data = await request(url, this.blogConfig,{method, data: {
 				posts: [post]
 			}})
+			let newPost = null
 			if (typeof data === 'object' && Array.isArray(data.posts) && data.posts.length > 0) {
-				return data.posts[0]
+				newPost = data.posts[0]
 			}
-			return null;
+			const serverPost = await await request(`posts/${newPost.id}`, this.blogConfig,{method : 'GET',params:{
+				formats: ['html', 'mobiledoc'],
+			}});// 多做这一步是为了，拿post的html
+			if (typeof serverPost === 'object' && Array.isArray(serverPost.posts) && serverPost.posts.length > 0) {
+				newPost = serverPost.posts[0]
+			}
+			// console.log('---serverPost', serverPost)
+			return newPost;
 		} catch (error) {
 			console.log('---savePost error---', error)
 			return null
@@ -151,6 +133,13 @@ export default class GhostAdminApi {
 		} catch (error) {
 			return '';
 		}
-	
+	}
+
+	async getSlug(oldSlug) {
+		if (!oldSlug) {
+			throw('please input post slug')
+		}
+		const { slugs: [{slug}]} = await request(`posts/slug/${oldSlug}`,this.blogConfig, {method : 'GET'})
+		return slug;
 	}
 }
