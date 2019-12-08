@@ -7,7 +7,7 @@ export const PostStatus = {
   draft: "draft"
 };
 
-export const handlePost = (item) => {
+export const handlePost = item => {
   let markdown = '';
   let supportMd = false;
   if (item && typeof item === 'object') {

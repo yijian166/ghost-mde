@@ -29,8 +29,6 @@
   $: feature_image = post ? ($postDetail.post.feature_image || ''): '';
   $: slug = post ? ($postDetail.post.slug || ''): '';
 
-  // TODO: config change event
-
   async function onInputChange(key, value) {
     if (!post) {return}
     postDetail.update(data => {

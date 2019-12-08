@@ -150,7 +150,7 @@
           </div>
           
           <div class="post-tool">
-            <span class="icon is-small" on:click|stopPropagation={() => del(post.id)}>
+            <span class="icon is-small" on:click|stopPropagation={() => del(post)}>
               <i class="fas fa-trash-alt" aria-hidden="true"></i>
             </span>
           </div>
@@ -169,26 +169,37 @@
 
 <script>
   import Box from './Box.svelte'
-  import { initPostDetail, postDetail, postList, ghostApiService } from '@store';
+  import { initPostDetail, postDetail, postList, ghostApiService, confirmModal, message } from '@store';
   import { writable, get } from 'svelte/store';
 
   $: list = Array.isArray($postList.list) ? $postList.list : [];
   $: isLoading = !!$postList.isLoading;
   $: totalCount = $postList ? $postList.total : 0;
   $: hasMore = totalCount > list.length;
-  $: isEditing = postDetail && postDetail.isEditing;
+  $: isEditing = $postDetail && $postDetail.isEditing;
   $: selectedPostId = $postDetail ? $postDetail.post ? $postDetail.post.id:'':'';
   $: postStatus = $ghostApiService ? $ghostApiService.postStatus : {};
 
+  function showIsEditor() {
+    message.set({
+      body: 'Is editing, please quite fist.',
+    })
+  }
   function newPost() {
-    if (isEditing) {return}
+    if (isEditing) {
+      showIsEditor()
+      return
+    }
     postDetail.set({
       ...initPostDetail,
       isEditing: true,
     })
   }
   function selectPost(post) {
-    if (isEditing) {return}
+    if (isEditing) {
+      showIsEditor()
+      return
+    }
     postDetail.set({
       ...initPostDetail,
       post: post
@@ -236,7 +247,16 @@
     getList(api, page, limit)
   });
 
-  async function del(id) {
+  function del(post) {
+    confirmModal.set({
+      title: 'Are you sure you want to delete this post?',
+      body: `You're about to delete "${post.title}". This is permanent!`,
+      confirmText: 'Delete',
+      asyncFun: async () => doDel(post.id)
+    })
+  }
+
+  async function doDel(id) {
     const isOk = await $ghostApiService.delPost(id);
     console.log('---del isOk---', isOk);
     if (isOk) {
@@ -255,8 +275,9 @@
           }
         })
       }
-      
     }
+
+    return isOk;
   }
 
 

@@ -22,3 +22,8 @@ export const postList = writable({
 
 
 export const editorInitValue = writable('')
+
+
+export const confirmModal = writable({})
+
+export const message = writable({})

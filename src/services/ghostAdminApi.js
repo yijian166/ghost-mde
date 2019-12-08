@@ -100,21 +100,24 @@ export default class GhostAdminApi {
 			const data = await request(url, this.blogConfig,{method, data: {
 				posts: [post]
 			}})
-			let newPost = null
-			if (typeof data === 'object' && Array.isArray(data.posts) && data.posts.length > 0) {
-				newPost = data.posts[0]
+			if (!data || typeof data === 'object' && Array.isArray(data.errors)) {
+				throw data.errors;
 			}
-			const serverPost = await await request(`posts/${newPost.id}`, this.blogConfig,{method : 'GET',params:{
-				formats: ['html', 'mobiledoc'],
-			}});// 多做这一步是为了，拿post的html
-			if (typeof serverPost === 'object' && Array.isArray(serverPost.posts) && serverPost.posts.length > 0) {
-				newPost = serverPost.posts[0]
+			let newPost = null
+			if (data && typeof data === 'object' && Array.isArray(data.posts) && data.posts.length > 0) {
+				newPost = data.posts[0]
+				const serverPost = await request(`posts/${newPost.id}`, this.blogConfig,{method : 'GET',params:{
+					formats: ['html', 'mobiledoc'],
+				}});// 多做这一步是为了，拿post的html
+				if (serverPost && typeof serverPost === 'object' && Array.isArray(serverPost.posts) && serverPost.posts.length > 0) {
+					newPost = serverPost.posts[0]
+				}
 			}
 			// console.log('---serverPost', serverPost)
 			return newPost;
 		} catch (error) {
-			console.log('---savePost error---', error)
-			return null
+			console.warn('---savePost error---', error)
+			throw error
 		}
 	
 	}

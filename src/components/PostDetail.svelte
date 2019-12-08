@@ -156,7 +156,7 @@
   import PostConfig from './PostConfig.svelte'
   import PublishBtn from './PublishBtn.svelte'
   import { writable, derived } from 'svelte/store';
-  import { ghostApiService, postDetail, postList, editorInitValue } from '@store'
+  import { ghostApiService, postDetail, postList, editorInitValue, message } from '@store'
   import { EditorSaveInterval, handlePost } from '@config';
   import debounce from 'lodash/debounce';
   import pick from 'lodash/pick';
@@ -282,8 +282,10 @@
   function doEdit() {
     console.log('---doEdit---')
     if (!supportMd) {
-      // TODO: 提示不能解析为markdown的情况
-      console.warn('---no support---')
+      message.set({
+        body: 'No Support Yet. not single markdown card',
+        type: 'warning'
+      });
       return;
     }
     
@@ -298,67 +300,83 @@
   }
   
   async function saveOrPublish(toStatus, published_at) {
-    if (!$editor) {
-      return;
-    }
-    postDetail.update(data => {
-      return {
-        ...data,
-        isSending:true,
+    let newPost
+    try {
+      if (!$editor) {
+        return;
       }
-    })
-    const md = $editor.value();
-    const status = toStatus ? toStatus : selectedPost.status;
-    const post = {
-      title,
-      ...pick(selectedPost || {}, supportEditKeys),
-      status,
-      ...(status === $ghostApiService.postStatus.scheduled ? {published_at: new Date(published_at)}:{}) // scheduled 情况下， published_at 应该需要存在
-    }
-    console.log('---saveOrPublish start api call----')
-    const data = await $ghostApiService.savePost(post, md);
-    const newPost = handlePost(data);
-    if (!data) {
+      postDetail.update(data => {
+        return {
+          ...data,
+          isSending:true,
+        }
+      })
+      const md = $editor.value();
+      const status = toStatus ? toStatus : (selectedPost || {}).status || $ghostApiService.postStatus.draft;
+      const post = {
+        title,
+        ...pick(selectedPost || {}, supportEditKeys),
+        status,
+        ...(status === $ghostApiService.postStatus.scheduled ? {published_at: new Date(published_at)}:{}) // scheduled 情况下， published_at 应该需要存在
+      }
+      console.log('---saveOrPublish start api call----')
+      const data = await $ghostApiService.savePost(post, md);
+      newPost = handlePost(data);
+      
+      postList.update(postListData => {
+        const list = selectedPost ? postListData.list.map(item => {
+          if (item.id === newPost.id) {
+            return newPost
+          }
+          return {...item}
+        }):  [newPost,...postListData.list]
+        console.log('---postList.update---', list)
+        
+        return {
+          ...postListData,
+          list
+        }
+      })
+      console.log('---saveOrPublish---', newPost);
+      return newPost;
+    } catch (error) {
       // TODO: 处理接口失败的情况
+      let code = ''
+      let msg = 'post save failed'
+      if (Array.isArray(error) && error.length > 0) {
+        code = error[0].code;
+        msg = error[0].message;
+      }
+      message.set({
+        body: msg,
+        type: 'danger'
+      })
 
-      //TODO: 409 Conflict 
+      // 409 Conflict code === "UPDATE_COLLISION"
       // 1. 每次更新的时候，传的是上次拿到的updated_at time
       // 2. 如果接口冲突说明，说明别人比你拿到了更新的server端 updated_at time 这样也就是冲突了
       // 3. 提示用户推出编辑，拉取一封最新的post信息
       // 4. 因此这里是实际上是一种抢占式的，防冲突策略
-    }
-
-    postDetail.update(value => {
-      return {
-        ...value,
-        isSending:false,
-        ...(!selectedPost ? {
-          post: newPost,
-        }: {
-          post: {
-            ...value.post,
-            ...pick(newPost, supportEditKeys.concat(['html']))
+    } finally {
+      postDetail.update(value => {
+        const ob = {}
+        if (newPost) {
+          if(selectedPost) {
+            ob.post = newPost
+          } else {
+            ob.post = {
+              ...value.post,
+              ...pick(newPost, supportEditKeys.concat(['html']))
+            }
           }
-        })
-      }
-    });
-    
-    postList.update(postListData => {
-      const list = selectedPost ? postListData.list.map(item => {
-        if (item.id === newPost.id) {
-          return newPost
         }
-        return {...item}
-      }):  [newPost,...postListData.list]
-      console.log('---postList.update---', list)
-      
-      return {
-        ...postListData,
-        list
-      }
-    })
-    console.log('---saveOrPublish---', newPost);
-    return newPost;
+        return {
+          ...value,
+          isSending:false,
+          ...ob
+        }
+      });
+    }
   }
 
   async function fileUploadFun(file) {
@@ -367,6 +385,12 @@
     if ($ghostApiService) {
       url = await $ghostApiService.uploadImg(file);
       console.log('---fileUploadFun upload ---', url)
+    }
+    if (!url) {
+      message.set({
+        body: 'upload image fail',
+        type: 'danger'
+      });
     }
     // TODO: url empty message
     return url

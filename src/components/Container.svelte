@@ -30,10 +30,13 @@
 			<PostDetail />
 		</div>
 </div>
-
+<ConfirmModal />
+<Message />
 <script>
 	import PostsList from './PostsList.svelte'
-  import PostDetail from './PostDetail.svelte'
+	import PostDetail from './PostDetail.svelte'
+	import ConfirmModal from './Modal.svelte'
+	import Message from './Message.svelte'
   import GhostAdminApi from '@api';
   import { onMount } from 'svelte';
 	import { writable } from 'svelte/store';
