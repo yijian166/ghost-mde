@@ -7,6 +7,24 @@ export const PostStatus = {
   draft: "draft"
 };
 
+export const PostVisibilitys = [
+  {
+    value: 'public',
+    title: 'Public',
+    isDefault: true
+  },
+  {
+    value: 'members',
+    title: 'Members only',
+    isDefault: false
+  },
+  {
+    value: 'paid',
+    title: 'Paid-members only',
+    isDefault: false
+  }
+]
+
 export const handlePost = item => {
   let markdown = '';
   let supportMd = false;

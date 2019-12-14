@@ -170,7 +170,7 @@
     
      
     <div class="gm-editor-config" style="{configPageStyle}">
-      <PostConfig on:change={saveOrPublishWithDebounce} />
+      <PostConfig on:change={onPostConfigChange} />
     </div>
     <!-- <div class="gm-detail-footer">
     </div> -->
@@ -198,7 +198,7 @@
   const maxEditorWidth = 800;
   const bottomHeight = 0;
   let editor = writable();
-  const supportEditKeys = ['id', 'feature_image', 'slug', 'updated_at', 'status']
+  const supportEditKeys = ['id', 'feature_image', 'slug', 'updated_at', 'status','visibility']
 
   // $: selectedPost = $postDetail ? $postDetail.post ? $postDetail.post: {} : {};
   $: selectedPost = $postDetail ? $postDetail.post : null;
@@ -257,6 +257,9 @@
         isPublishing
       }
     })
+  }
+  function onPostConfigChange() {
+    saveOrPublishWithDebounce()
   }
   async function doPublish(e) {
     if (!$ghostApiService) {return}
@@ -329,7 +332,7 @@
   async function saveOrPublish(toStatus, published_at) {
     let newPost
     try {
-      if (!$editor) {
+      if (!$editor || !isEditing) {
         return;
       }
       postDetail.update(data => {

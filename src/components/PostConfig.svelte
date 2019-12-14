@@ -18,18 +18,25 @@
   <div class="gm-post-config-item">
     <PostSlug {slug} on:change={e => onInputChange('slug', e.detail)}/>
   </div>
+  <div class="gm-post-config-item">
+    <PostVisibility {visibility} on:change={e => onInputChange('visibility', e.detail)}/>
+  </div>
+  
 </div>
 <script>
-  import ImgUploader from './ImgUploader.svelte'
-  import PostSlug from './PostSlug.svelte'
+  import ImgUploader from './postConfig/ImgUploader.svelte'
+  import PostSlug from './postConfig/PostSlug.svelte'
+  import PostVisibility from './postConfig/PostVisibility.svelte'
   import { ghostApiService, postDetail } from '@store'
   import { createEventDispatcher, tick } from 'svelte';
   const dispatch = createEventDispatcher();
   $: post = $postDetail ? $postDetail.post : null;
-  $: feature_image = post ? ($postDetail.post.feature_image || ''): '';
-  $: slug = post ? ($postDetail.post.slug || ''): '';
+  $: feature_image = post ? (post.feature_image || ''): '';
+  $: slug = post ? (post.slug || ''): '';
+  $: visibility = post ? (post.visibility || 'public'): 'public';
 
   async function onInputChange(key, value) {
+    console.log('---onInputChange--',key, value)
     if (!post) {return}
     postDetail.update(data => {
       return {
