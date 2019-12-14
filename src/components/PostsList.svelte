@@ -115,6 +115,9 @@
   .gm-post-ptime {
     font-size: 12px;
   }
+  .gm-tag-status {
+    text-transform: capitalize;
+  }
 </style>
 <aside>
   <h1 class="haeder">
@@ -135,7 +138,7 @@
           <!-- ellipsis-v -->
           <div class="gm-post-others">
             <span 
-              class="tag  is-light" 
+              class="tag  is-light gm-tag-status " 
               class:is-danger={post.status === postStatus.draft} 
               class:is-success={post.status === postStatus.published}
               class:is-info={post.status === postStatus.scheduled}

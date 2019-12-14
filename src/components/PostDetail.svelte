@@ -63,14 +63,14 @@
     }
   }
   .gm-post-detail {
-    /* height: 100%; */
-    flex: 1;
+    height: 100%;
     overflow: hidden;
     padding: @sizePadding 0 @sizePadding @sizePadding;
     display: flex;
     flex-direction: column;
     position: relative;
     z-index: 1;
+    box-sizing: border-box;
   }
   .gm-editor-config {
     position: absolute;
@@ -81,6 +81,13 @@
     z-index: 2;
     border-left: 1px solid rgba(0, 0, 0, 0.1);
     /* box-shadow: -1px 3px 3px rgba(0, 0, 0, 0.2); */
+  }
+  .gm-editor-status {
+    position: absolute;
+    bottom: 0;
+    left: @sizePadding;
+    padding: 8px 10px 8px 0;
+    font-size: 12px;
   }
   .gm-post-box {
     max-width: 800px;
@@ -100,6 +107,10 @@
     height: 100%;
     padding-right: @sizePadding;
     overflow: auto;
+  }
+
+  .gm-tag-status {
+    text-transform: capitalize;
   }
 
 
@@ -134,12 +145,24 @@
         <div class="gm-editor-box">
           <Editor {topHeight} {bottomHeight} {fileUploadFun} on:open="{onHasEditor}" on:close="{onEditorClose}"/>
         </div>
+        
       {:else}
         <div class="gm-post-html">
           <PostPreview {postHTML} />
         </div>
       {/if}
     </div>
+
+
+    {#if isEditing } 
+    <div class="gm-editor-status">
+      <span class="gm-tag-status" style="margin-right: 20px;">{postStatus}</span>
+      {#if isSending} 
+        <span style="color: hsl(171, 100%, 41%);">Saving……</span>
+      {/if}
+    </div>
+    {/if}
+    
      
     <div class="gm-editor-config" style="{configPageStyle}">
       <PostConfig on:change={saveOrPublishWithDebounce} />
@@ -337,7 +360,7 @@
           list
         }
       })
-      console.log('---saveOrPublish---', newPost);
+      console.log('---saveOrPublish---', newPost, newPost.updated_at);
       return newPost;
     } catch (error) {
       // TODO: 处理接口失败的情况
