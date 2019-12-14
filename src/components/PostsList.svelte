@@ -172,7 +172,7 @@
 
 <script>
   import Box from './Box.svelte'
-  import { initPostDetail, postDetail, postList, ghostApiService, confirmModal, message } from '@store';
+  import { initPostDetail, postDetail, postList, ghostApiService, confirmModal, message,  quitEdit} from '@store';
   import { writable, get } from 'svelte/store';
 
   $: list = Array.isArray($postList.list) ? $postList.list : [];
@@ -184,29 +184,26 @@
   $: postStatus = $ghostApiService ? $ghostApiService.postStatus : {};
 
   function showIsEditor() {
-    message.set({
-      body: 'Is editing, please quite fist.',
-    })
+    quitEdit(false)
+    // message.set({
+    //   body: 'Is editing, please quite fist.',
+    // })
   }
-  function newPost() {
-    if (isEditing) {
-      showIsEditor()
-      return
+  async function newPost() {
+    if (await quitEdit(false)) {
+      postDetail.set({
+        ...initPostDetail,
+        isEditing: true,
+      })
     }
-    postDetail.set({
-      ...initPostDetail,
-      isEditing: true,
-    })
   }
-  function selectPost(post) {
-    if (isEditing) {
-      showIsEditor()
-      return
+  async function selectPost(post) {
+    if (await quitEdit(false)) {
+      postDetail.set({
+        ...initPostDetail,
+        post: post
+      })
     }
-    postDetail.set({
-      ...initPostDetail,
-      post: post
-    })
   }
 
   async function doLoadMore() {

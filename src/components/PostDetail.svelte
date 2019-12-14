@@ -156,7 +156,12 @@
 
     {#if isEditing } 
     <div class="gm-editor-status">
-      <span class="gm-tag-status" style="margin-right: 20px;">{postStatus}</span>
+      <span class="gm-tag-status" style="margin-right: 20px;">
+        {postStatus}
+        {#if isDraft}
+          (auto save)
+        {/if}
+      </span>
       {#if isSending} 
         <span style="color: hsl(171, 100%, 41%);">Saving……</span>
       {/if}
@@ -215,7 +220,6 @@
 
 
   const saveOrPublishWithDebounce = debounce(saveOrPublish, 1000 * 10);
-
 
   const editorValue = derived(editor, ($editor, set) => {
     console.log('--editor--', $editor)

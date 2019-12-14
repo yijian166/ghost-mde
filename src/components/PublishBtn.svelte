@@ -74,24 +74,15 @@
         {/if}
       </div>
       <div class="gm-publish-action">
+        <button class="button is-white" on:click={doQuitEdit}>Quit Editor</button>
         <button class="button" on:click={close} disabled={isSending}>Cancel</button>
-        <button class="button is-info" on:click={doPublish} class:is-loading={isSending} disabled={isSending}>Save</button>
+        <button class="button is-info" on:click={doPublish} class:is-loading={isSending} disabled={isSending}>{okBtn}</button>
       </div>
-      
-      <!-- <a class="dropdown-item">
-        Save
-      </a>
-      <a class="dropdown-item" class:is-active={publihClicked} on:click|preventDefault={saveOrPublish}>
-        Publish
-      </a>
-      <a class="dropdown-item" on:click|preventDefault={cancelEdit}>
-        Cancel Edit
-      </a> -->
     </div>
   </div>
 </div>
 <script>
-  import { ghostApiService, postDetail, postList } from '@store'
+  import { ghostApiService, postDetail, postList, quitEdit } from '@store'
   import { createEventDispatcher, afterUpdate, onDestroy, beforeUpdate } from 'svelte';
   import {PostStatus} from '@config'
   const dispatch = createEventDispatcher();
@@ -104,6 +95,7 @@
   $: isScheduled = $ghostApiService && oldStatus === PostStatus.scheduled ;
   $: isPublished = $ghostApiService && oldStatus === PostStatus.published ;
   $: isSending = !!$$props.isSending;
+  $: okBtn = value === PostStatus.published ? 'Publish' : value === PostStatus.draft ? 'Unpublish':'Schedule';
 
   $: {
     // console.log('-=---', time, $$props.publishedTime)
@@ -155,6 +147,11 @@
   async function doPublish() {
     console.log('---btn doPublish--', oldStatus, value, time)
     dispatch('doPublish', {status: value, time, changed: value !== oldStatus})
+  }
+
+  async function doQuitEdit() {
+    const isQit = await quitEdit();
+    isQit && close()
   }
 
   function close(toClose = true) {

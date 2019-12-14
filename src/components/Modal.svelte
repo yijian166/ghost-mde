@@ -27,25 +27,27 @@
   
 
   async function save() {
+    const notQuit = typeof $confirmModal !== 'object' || !$confirmModal.isQuit; 
     if (typeof $confirmModal === 'object' &&  typeof $confirmModal.asyncFun === 'function') {
+      
       try {
         isSending = true
         const isok = await $confirmModal.asyncFun()
         if (isok) {
           cancel();
-          message.set({
+          notQuit && message.set({
             body:`${confirmText} success`,
             type: 'success'
           })
         }else {
-          message.set({
+          notQuit && message.set({
             body:`${confirmText} fail`,
             type: 'danger'
           })
         }
       } catch (error) {
         console.log('---error', error)
-        message.set({
+        notQuit && message.set({
           body:`${confirmText} fail`,
           type: 'danger'
         })
@@ -55,7 +57,10 @@
     } 
   }
 
-  function cancel() {
+  async function cancel() {
+    if (typeof $confirmModal === 'object' &&  typeof $confirmModal.cancelFun === 'function') {
+      await $confirmModal.cancelFun()
+    }
     confirmModal.set({})
   }
 </script>
