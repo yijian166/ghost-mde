@@ -101,6 +101,17 @@
     // console.log('-=---', time, $$props.publishedTime)
     if (isPublishing) {
       document.addEventListener('click', close)
+      document.addEventListener('keyup', doEsc) 
+    }
+  }
+
+
+  function doEsc(e) {
+    console.log('---',e)
+    if (e.keyCode === 27) {
+      //esc
+      document.removeEventListener('keyup', doEsc)
+      close()
     }
   }
 
@@ -157,6 +168,7 @@
   function close(toClose = true) {
     dispatch('openToggle', toClose);
     document.removeEventListener('click', close)
+    document.removeEventListener('keyup', doEsc)
   }
 
   beforeUpdate(() => {

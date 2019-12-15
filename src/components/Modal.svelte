@@ -25,11 +25,24 @@
 
   let isSending = false;
   
+  $: {
+    if(showShow) {
+      document.addEventListener('keyup', doEsc) 
+    }
+  }
+
+  function doEsc(e) {
+    console.log('---',e)
+    if (e.keyCode === 27) {
+      //esc
+      document.removeEventListener('keyup', doEsc)
+      cancel()
+    }
+  }
 
   async function save() {
     const notQuit = typeof $confirmModal !== 'object' || !$confirmModal.isQuit; 
     if (typeof $confirmModal === 'object' &&  typeof $confirmModal.asyncFun === 'function') {
-      
       try {
         isSending = true
         const isok = await $confirmModal.asyncFun()

@@ -198,6 +198,9 @@
     }
   }
   async function selectPost(post) {
+    if (selectedPostId === post.id) {
+      return;
+    }
     if (await quitEdit(false)) {
       postDetail.set({
         ...initPostDetail,
