@@ -105,9 +105,7 @@
     }
   }
 
-
   function doEsc(e) {
-    console.log('---',e)
     if (e.keyCode === 27) {
       //esc
       document.removeEventListener('keyup', doEsc)

@@ -1,0 +1,14 @@
+{
+  "version": 3,
+  "file": "bundle.css",
+  "sources": [
+    "../src/App.svelte",
+    "../src/components/Container.svelte"
+  ],
+  "sourcesContent": [
+    "<style type=\"text/less\">.box {\n  height: 100%;\n}\n.box p {\n  border-bottom: 1px solid  red;\n}\n</style>\n<!-- <style global type=\"text/less\">:global(html),\n:global(body) {\n  height: 100%;\n}\n\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9BcHAuc3ZlbHRlIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBOztFQUVFLFlBQVk7QUFDZCIsImZpbGUiOiJzcmMvQXBwLnN2ZWx0ZSIsInNvdXJjZXNDb250ZW50IjpbImh0bWwsXG5ib2R5IHtcbiAgaGVpZ2h0OiAxMDAlO1xufVxuIl19 */</style>  -->\n<Container>\n\t<div class=\"box\"><p class=\"subtitle\">ss</p></div>\n</Container>\n\n\n<script>\n\timport { onMount } from 'svelte';\n\timport GhostAdminApi from '@api'\n\timport Container from './components/Container.svelte'\n\n\tconst blogConfig = {\n\t\turl: 'https://hicc.me',\n\t\tkey: '5dc6bb0c86f77b000148a666:6681969450497e6feec80a9871ced1d26ff4bdd984d0c378f88c3eb1b599c3a1',\n\t\tversion: \"v3\"\n\t}\n\n\tconst api = new GhostAdminApi(blogConfig);\n\n\tonMount(async () => {\n\t\n\t\t\n\t\tconst result = await api.getPosts();\n\t\tconsole.log('--', result)\n\n\t});\n\tlet name = 'world';\n</script>",
+    "<style >\ndiv {\n  background-color: red\n}\n</style>\n<div>\n  <slot></slot>\n</div>"
+  ],
+  "names": [],
+  "mappings": "AAAwB,IAAI,cAAC,CAAC,AAC5B,MAAM,CAAE,IAAI,AACd,CAAC,AACD,kBAAI,CAAC,CAAC,cAAC,CAAC,AACN,aAAa,CAAE,GAAG,CAAC,KAAK,EAAE,GAAG,AAC/B,CAAC;ACJD,GAAG,eAAC,CAAC,AACH,gBAAgB,CAAE,GAAG;AACvB,CAAC"
+}
