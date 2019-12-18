@@ -294,14 +294,14 @@
 
   const setEditorSizeWithDeBounce = debounce(setEditorSize, 1000)
   $: {
-    console.log('----size update----')
+    // console.log('----size update----')
     setEditorSizeWithDeBounce(innerWidth, innerHeight)
   }
 
-  const valueUnSub = editorInitValue.subscribe(value => {
-    console.warn('---editorInitValue subscribe---', value)
+  const valueUnSub = editorInitValue.subscribe(({markdown}) => {
+    // console.warn('---editorInitValue subscribe---', markdown)
     if (editor) {
-      editor.value(value)
+      editor.value(markdown)
     }
   })
 

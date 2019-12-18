@@ -21,8 +21,9 @@ export const postList = writable({
   limit: 20
 });
 
-
-export const editorInitValue = writable('')
+// 这里使用对象，而不是字符串，
+// 是为了避免两次同时打开一个文章但是store不触发的问题（因为Svelte，store特性，会过滤相同值)
+export const editorInitValue = writable({markdown: ''}) 
 
 export const confirmModal = writable({})
 

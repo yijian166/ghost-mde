@@ -300,9 +300,10 @@
   }
   
   function onHasEditor(e) {
-    console.log('--onHasEditor--',e)
+    // console.warn('--onHasEditor--',_markdown)
+    // !_markdown && console.warn('---onHasEditor- empty md---')
     editor.set(e.detail);
-    editorInitValue.set(_markdown)
+    editorInitValue.set({markdown:_markdown}) 
   }
   function onEditorClose() {
     console.log('--onEditorClose--',editor)
