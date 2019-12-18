@@ -1,45 +1,28 @@
-<div class="modal" class:is-active={showShow}>
-  <div class="modal-background" ></div>
-  <div class="modal-card">
-    <header class="modal-card-head">
-      <p class="modal-card-title">{title}</p>
-      <button class="delete" aria-label="close" on:click={cancel}></button>
-    </header>
-    <section class="modal-card-body">
-      <!-- Content ... -->
-      <p>{body}</p>
-    </section>
-    <footer class="modal-card-foot">
-      <button class="button is-danger" on:click={save} class:is-loading={isSending} disabled={isSending}>{confirmText}</button>
-      <button class="button" on:click={cancel} disabled={isSending}>Cancel</button>
-    </footer>
-  </div>
-</div>
+<ModalBox
+ {show} 
+ {title}
+ {isSending}
+ {confirmText}
+ btnType="danger"
+ on:cancel={cancel}
+ on:save={save}
+>
+  <p>{body}</p>
+</ModalBox>
 <script>
   import { confirmModal, message } from '@store'
+  import ModalBox from './ModalBox.svelte'
 
   $: title = typeof $confirmModal === 'object' ? $confirmModal.title : '';
   $: body = typeof $confirmModal === 'object' ? $confirmModal.body : '';
   $: confirmText = typeof $confirmModal === 'object' ? $confirmModal.confirmText : '';
-  $: showShow = !!title;
+  $: show = !!title;
 
   let isSending = false;
   
-  $: {
-    if(showShow) {
-      document.addEventListener('keyup', doEsc) 
-    }
-  }
-
-  function doEsc(e) {
-    if (e.keyCode === 27) {
-      //esc
-      document.removeEventListener('keyup', doEsc)
-      cancel()
-    }
-  }
 
   async function save() {
+    console.log('---cancel---')
     const notQuit = typeof $confirmModal !== 'object' || !$confirmModal.isQuit; 
     if (typeof $confirmModal === 'object' &&  typeof $confirmModal.asyncFun === 'function') {
       try {
@@ -70,6 +53,7 @@
   }
 
   async function cancel() {
+    console.log('---cancel---')
     if (typeof $confirmModal === 'object' &&  typeof $confirmModal.cancelFun === 'function') {
       await $confirmModal.cancelFun()
     }

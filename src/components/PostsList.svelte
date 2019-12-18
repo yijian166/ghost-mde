@@ -121,7 +121,7 @@
 </style>
 <aside>
   <h1 class="haeder">
-    Blog List 
+    Post List 
     <button class="add-btn" on:click={newPost}>
       <i class="fas fa-plus"></i>
     </button>

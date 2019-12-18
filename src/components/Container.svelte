@@ -41,10 +41,11 @@
   import { onMount } from 'svelte';
 	import { writable } from 'svelte/store';
 	import { ghostApiService } from '@store';
-	
   
   onMount(() => {
-		const api = new GhostAdminApi($$props.blogConfig);
-		ghostApiService.set(api);
+		if (typeof $$props.blogConfig === 'object' && Object.keys($$props.blogConfig).length > 0) {
+			const api = new GhostAdminApi($$props.blogConfig);
+			ghostApiService.set(api);
+		}
 	});
 </script>
