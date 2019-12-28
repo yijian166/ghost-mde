@@ -17,10 +17,17 @@
     /* color: white; */
     /* border-right: 1px solid #bbb; */
     position: relative;
-    padding-right: 50px;;
+    padding-right: 50px;
     /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) */
+
+    &:hover {
+      .gm-config-btn {
+        display: block;
+      }
+    }
   }
   .gm-config-btn {
+    display: none;
     position: absolute;
     top: 0;
     right: 0;
@@ -31,10 +38,12 @@
     /* color: #fff; */
     cursor: pointer;
     font-size: 18px;
-    color: rgba(0, 0, 0, 0.6);
+    color: hsl(348, 100%, 61%);
+    opacity: 0.4;
     &:hover {
       /* color: #fff; */
-      color: rgba(0, 0, 0, 0.9)
+      opacity: 0.6;
+      color: darken(hsl(348, 100%, 61%), 5%);
     }
   }
   .gm-post-list {
@@ -150,10 +159,13 @@
 </style>
 <aside>
   <h1 class="gm-haeder title is-5">
-    Post List
-    <button class="gm-config-btn" on:click={newPost}>
-      <i class="fas fa-cog"></i>
+    {blogUrl}
+    {#if hasBlog} 
+    <button class="gm-config-btn" on:click={rmBlog}>
+      <!-- <i class="fas fa-cog"></i> -->
+      <i class="fas fa-trash-restore-alt" alt="remove blog"></i>
     </button>
+    {/if}
   </h1>
   {#if hasBlog} 
     <button class="gm-add-btn" on:click={newPost}>
@@ -207,7 +219,8 @@
 
 <script>
   import Box from './Box.svelte'
-  import { initPostDetail, postDetail, postList, ghostApiService, confirmModal, message,  quitEdit} from '@store';
+  import { initPostDetail, postDetail, postList, ghostApiService, confirmModal, message,  quitEdit, blogConfig} from '@store';
+  import { BlogConfigInfo } from '@api';
   import { writable, get } from 'svelte/store';
   import { saveData, getData } from '@db'
   $: list = Array.isArray($postList.list) ? $postList.list : [];
@@ -217,13 +230,32 @@
   $: isEditing = $postDetail && $postDetail.isEditing;
   $: selectedPostId = $postDetail ? $postDetail.post ? $postDetail.post.id:'':'';
   $: postStatus = $ghostApiService ? $ghostApiService.postStatus : {};
-  $: hasBlog = $ghostApiService && $ghostApiService.hasApi
+  $: hasBlog = $ghostApiService && $ghostApiService.hasApi;
+  $: blogUrl = hasBlog ? $ghostApiService.blogConfig.url.replace(/https:\/\/|http:\/\//, ''): ''
 
   function showIsEditor() {
     quitEdit(false)
-    // message.set({
-    //   body: 'Is editing, please quite fist.',
-    // })
+
+  }
+  function rmBlog() {
+    confirmModal.set({
+      title: 'Are you sure you want to remove this Blog?',
+      body: `You're about to remove "${blogUrl}". `,
+      confirmText: 'Remove',
+      asyncFun: async () => {
+        try {
+          const emptyConfig = new BlogConfigInfo('', '')
+          await saveData('blogInfo', emptyConfig);
+          await saveData('blogInfo', emptyConfig, true);
+          await saveData('postList', {posts:[], total:0})
+          blogConfig.set(emptyConfig)
+          return true
+        } catch (error) {
+          return false
+        }
+        
+      }
+    })
   }
   async function newPost() {
     if (await quitEdit(false)) {

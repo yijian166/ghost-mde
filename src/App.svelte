@@ -8,7 +8,7 @@
 
 <div class="gm-container">
 	<Container />
-	<BlogConfig show={showBlogConfigModal}/>
+	<BlogConfig show={showBlogConfigModal} {reConfig}/>
 </div>
 <script>
 
@@ -21,14 +21,10 @@
 	import { blogConfig } from '@store';
 	import { BlogConfigInfo } from '@api'
 
-	// let blogConfig = {
-	// 	url: 'https://hicc.me',
-	// 	key: '5dc6bb0c86f77b000148a666:6681969450497e6feec80a9871ced1d26ff4bdd984d0c378f88c3eb1b599c3a1',
-	// 	version: "v3"
-	// }
 	let isGetting = true;
+	let reConfig = false;
 
-	$: hasBlogConfig = typeof $blogConfig === 'object' && Object.keys($blogConfig).length > 0;
+	$: hasBlogConfig = typeof $blogConfig === 'object' && $blogConfig.hasConfig;
 	$: showBlogConfigModal = !isGetting && !hasBlogConfig
 
 	const count = writable(0);
@@ -44,11 +40,7 @@
 			isGetting = true;
 			const useData = await tryGetData('blogInfo');
 			if (useData.isOk && useData.data) {
-				blogConfig.set({
-					url: useData.data.url,
-					key: useData.data.key,
-					version: "v3"
-				});
+				blogConfig.set(new BlogConfigInfo(useData.data.url, useData.data.key));
 			}
 			const asyncData = await tryGetData('async');
 			console.log('---useData---', useData, asyncData)

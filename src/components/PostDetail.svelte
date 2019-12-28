@@ -138,7 +138,7 @@
         <!-- <button class="button is-black is-small">publish</button>     -->
         <PublishBtn value={postStatus} {isSending} {isPublishing} {publishedTime} on:openToggle={publishPanelToggle} on:doPublish={doPublish}/>
         <span class="icon gm-icon" on:click={configToggle}>
-          <i class="far fa-compass"></i>
+          <i class="fas fa-cog"></i>
         </span>
       {:else if canEdit}
         <!-- <button class="button is-small" on:click={doEdit}>Edit</button> -->

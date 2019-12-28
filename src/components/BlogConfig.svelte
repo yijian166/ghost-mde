@@ -36,7 +36,7 @@
 </ModalBox>
 <script>
   import ModalBox from './ModalBox.svelte'
-  import { message } from '@store'
+  import { message, blogConfig } from '@store'
   import { getData, tryGetData, saveData } from '@db'
   import { BlogConfigInfo } from '@api'
   import { createEventDispatcher } from 'svelte';
@@ -45,7 +45,17 @@
   let isSending = false;
   let url = '';
 	let key = '';
-	let async = true;
+  let async = true;
+  
+  // $: {
+  //   console.log('---re blog config---')
+  //   if ($$props.show) {
+  //     (async () => {
+  //       const {data = false} = await tryGetData('async');
+  //       async = data;
+  //     })();
+  //   }
+  // }
   
   function cancelAddBlog() {
 
@@ -68,7 +78,11 @@
     }
 
     const asyncData = await saveData('async', async, true);
-    const userData = await saveData('blogInfo', new BlogConfigInfo(url, key),async);
+    const _url = url.endsWith('/')?url.slice(0,url.length -1):url;
+    const _blogConfig =  new BlogConfigInfo(_url, key)
+    const userData = await saveData('blogInfo',_blogConfig,async);
+    await saveData('postList', {posts:[], total:0})
+    blogConfig.set(_blogConfig)
     console.log('---', userData)
   }
 </script>

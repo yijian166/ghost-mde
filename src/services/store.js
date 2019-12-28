@@ -2,12 +2,7 @@ import { writable, get, derived,readable } from 'svelte/store';
 import { tick } from 'svelte';
 import GhostAdminApi, { BlogConfigInfo } from '@api';
 
-export const blogConfig = writable(new BlogConfigInfo())
-// export const ghostApiService = writable(null); // TODO: 不能从null 到 对象，无法触发subscribe， 尝试去掉这个，有点冗余
-// blogConfig.subscribe(config => {
-//   console.log('---blogConfig changed--', config)
-//   ghostApiService.set(config.hasConfig ? new GhostAdminApi(config) : null)
-// })
+export const blogConfig = writable(new BlogConfigInfo());
 export const ghostApiService = derived(blogConfig, ($blogConfig, set) => {
   console.warn('---blogConfig changed--', $blogConfig.hasConfig)
   set(new GhostAdminApi(new BlogConfigInfo($blogConfig.url, $blogConfig.key)))
