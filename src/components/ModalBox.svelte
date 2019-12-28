@@ -3,7 +3,9 @@
   <div class="modal-card">
     <header class="modal-card-head">
       <p class="modal-card-title">{title}</p>
-      <button class="delete" aria-label="close" on:click={cancel}></button>
+      {#if !noCancel}
+        <button class="delete" aria-label="close" on:click={cancel}></button>
+      {/if}
     </header>
     <section class="modal-card-body">
       <!-- Content ... -->
@@ -11,15 +13,17 @@
     </section>
     <footer class="modal-card-foot">
       <button 
-        class="button" 
-        on:click={save} 
+        class="button"
+        on:click={save}
         class:is-loading={isSending}
         class:is-danger={isDanger}
         class:is-success={isSuccess}
         disabled={isSending}>
         {confirmText}
       </button>
-      <button class="button" on:click={cancel} disabled={isSending}>Cancel</button>
+      {#if !noCancel}
+        <button class="button" on:click={cancel} disabled={isSending}>Cancel</button>
+      {/if}
     </footer>
   </div>
 </div>
@@ -36,9 +40,10 @@
   $: isDanger = $$props.btnType === 'danger';
   $: isSuccess = btnType === 'success'
   $: canEsc = !$$props.noEsc
+  $: noCancel = !!$$props.noCancel
 
   $: {
-    if(show && canEsc) {
+    if(show && canEsc && !noCancel) {
       document.addEventListener('keyup', doEsc) 
     }
   }

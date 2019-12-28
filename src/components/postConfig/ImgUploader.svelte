@@ -92,7 +92,7 @@
     const file = files[0];
     console.log('---fileUploadFun---', file)
     let url = '';
-    if ($ghostApiService) {
+    if ($ghostApiService.hasApi) {
       url = await $ghostApiService.uploadImg(file);
       console.log('---fileUploadFun upload ---', url)
     }

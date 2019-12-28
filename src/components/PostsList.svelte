@@ -3,20 +3,24 @@
     height: 100%;
     display: flex;
     flex-direction: column;
+    position: relative;
+    z-index: 1;
+    border-right: 1px solid #ddd;
   }
-  h1 {
+  .gm-haeder {
+    margin-bottom: 0;
     height: 50px;
     line-height: 50px;
-    background-color: #3298dc;
+    /* background-color: #3298dc; */
     padding-left: 10px;
-    font-size: 16px;
-    color: white;
-    border-right: 1px solid #bbb;
+    /* font-size: 16px; */
+    /* color: white; */
+    /* border-right: 1px solid #bbb; */
     position: relative;
     padding-right: 50px;;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2)
+    /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) */
   }
-  .add-btn {
+  .gm-config-btn {
     position: absolute;
     top: 0;
     right: 0;
@@ -24,8 +28,14 @@
     width: 40px;
     background: transparent;
     border: none;
-    color: #fff;
+    /* color: #fff; */
     cursor: pointer;
+    font-size: 18px;
+    color: rgba(0, 0, 0, 0.6);
+    &:hover {
+      /* color: #fff; */
+      color: rgba(0, 0, 0, 0.9)
+    }
   }
   .gm-post-list {
     flex: 1;
@@ -36,15 +46,17 @@
   }
   .gm-post-isloading {
     position: absolute;
-    top: 0;
-    left: 0;
+    top: 50px;
+    /* left: 0; */
     right: 0;
-    height: 30px;
-    line-height: 30px;
+    /* height: 30px;
+    line-height: 30px; */
     text-align: center;
-    background-color: hsl(217, 71%, 53%);
-    opacity: 0.5;
-    color: #fff;
+    /* background-color: hsl(217, 71%, 53%); */
+    /* opacity: 0.5; */
+    /* color: #fff; */
+    border: none;
+    z-index: 2;
   }
   ul {
     padding-right: 10px;
@@ -118,22 +130,45 @@
   .gm-tag-status {
     text-transform: capitalize;
   }
+  .gm-add-btn {
+    position: absolute;
+    right: 8px;
+    bottom: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 25px;
+    border: none;
+    background-color: #3298dc;
+    z-index: 10;
+    color: #fff;
+    box-shadow: 1px 3px 8px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    &:hover {
+      background-color: darken(#3298dc, 5%);
+    }
+  }
 </style>
 <aside>
-  <h1 class="haeder">
-    Post List 
-    <button class="add-btn" on:click={newPost}>
-      <i class="fas fa-plus"></i>
+  <h1 class="gm-haeder title is-5">
+    Post List
+    <button class="gm-config-btn" on:click={newPost}>
+      <i class="fas fa-cog"></i>
     </button>
   </h1>
+  {#if hasBlog} 
+    <button class="gm-add-btn" on:click={newPost}>
+      <i class="fas fa-plus"></i>
+    </button>
+  {/if}
+  {#if isLoading}
+    <button class="gm-post-isloading button is-loading">Loading</button>
+  {/if}
   <div class="gm-post-list">
-    {#if isLoading}
-      <span class="gm-post-isloading">Loading</span>
-    {/if}
+
     <ul>
       {#each list as post}
         <li on:click="{() => selectPost(post)}" class:active={selectedPostId === post.id}>
-          <h5 class="title is-5">{post.title}</h5>
+          <h5 class="title is-6">{post.title}</h5>
           <p>{post.excerpt}</p>
           <!-- ellipsis-v -->
           <div class="gm-post-others">
@@ -174,7 +209,7 @@
   import Box from './Box.svelte'
   import { initPostDetail, postDetail, postList, ghostApiService, confirmModal, message,  quitEdit} from '@store';
   import { writable, get } from 'svelte/store';
-
+  import { saveData, getData } from '@db'
   $: list = Array.isArray($postList.list) ? $postList.list : [];
   $: isLoading = !!$postList.isLoading;
   $: totalCount = $postList ? $postList.total : 0;
@@ -182,6 +217,7 @@
   $: isEditing = $postDetail && $postDetail.isEditing;
   $: selectedPostId = $postDetail ? $postDetail.post ? $postDetail.post.id:'':'';
   $: postStatus = $ghostApiService ? $ghostApiService.postStatus : {};
+  $: hasBlog = $ghostApiService && $ghostApiService.hasApi
 
   function showIsEditor() {
     quitEdit(false)
@@ -215,12 +251,18 @@
   }
 
   async function getList(api, page, limit, loadMore = false) {
-    console.log('---ghostApiService has value--', api)
-    if (!api) {
+    console.log('---ghostApiService has value--', api.hasApi)
+    if (!api.hasApi) {
+      // no api get list form chrome storage
+      const cacheData = await getData('postList')
+      console.log('---ghostApiService get cacheData--', cacheData)
+      const _posts = cacheData.isOk ? cacheData.data.posts: [];
+      const _total = cacheData.isOk ? cacheData.data.total: 0;
       postList.update(data => {
         return {
           ...data,
-          list: [],
+          list: _posts,
+          total: _total
         }
       })
     } else {
@@ -231,6 +273,10 @@
         }
       });
       const { posts, total } = await api.getPosts(page, limit);
+      if (page === 1) {
+        // cache first page
+        await saveData('postList', {posts, total})
+      }
       const sitConfig = await api.getSiteConfig();
       console.log('---GhostAdminApi--', posts, total, sitConfig)
       postList.update(data => {
@@ -238,7 +284,7 @@
           ...data,
           total,
           page,
-          list: data.list.concat(posts) ,
+          list: (page === 1 ? []:data.list).concat(posts) ,
           isLoading: false
         }
       })
@@ -246,6 +292,7 @@
   }
 
   ghostApiService.subscribe(async api => {
+    console.warn('---ghostApiService has changed---', api.hasApi)
     const {page, limit} = get(postList);
     getList(api, page, limit)
   });

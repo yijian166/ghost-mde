@@ -28,11 +28,28 @@ Date.prototype.toIsoString2 = function() {
 			':' + pad(tzo % 60);
 }
 
+export class BlogConfigInfo {
+	constructor(url = '',key = '') {
+		this.url = url;
+		this.key = key;
+		this.version =  "v3"
+	}
+
+	get hasConfig() {
+		return this.url && this.key;
+	}
+	
+}
+
 export default class GhostAdminApi {
 
-	constructor(blogConfig) {
+	constructor(blogConfig = new BlogConfigInfo()) {
 		this.blogConfig = blogConfig;
 		this.postStatus = PostStatus;
+	}
+
+	get hasApi() {
+		return !!this.blogConfig.hasConfig;
 	}
 
 	async getSiteConfig() {

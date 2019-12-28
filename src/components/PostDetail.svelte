@@ -17,31 +17,36 @@
     left: 0;
     right:0;
     height: @topH;
-    background-color: #3298dc;
+    /* background-color: #3298dc; */
     padding-left: @sizePadding;
     padding-right: @sizePadding;
     display: flex;
     flex-direction: row;
     align-items: center;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); */
     h1 {
       flex: 1;
-      color: #fff;
-      font-size: 18px;
+      /* color: #fff; */
+      /* font-size: 18px; */
+      margin-bottom: 0;
     }
     .gm-title-input {
-      color: #fafafa;
+      /* color: #fafafa; */
       font-size: 18px;
       border: none;
-      height: 36px;
-      line-height: 36px;
+      height: 40px;
+      line-height: 40px;
       box-sizing: border-box;
       padding: 2px 0;
       display: inline-block;
       width: 100%;
       background: transparent;
       outline: none;
-      border-bottom: 1px solid #f5f5f5;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.5);
+
+      &:focus {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.8);
+      }
     }
   }
   .gm-post-detail-tools {
@@ -55,10 +60,13 @@
     .gm-icon {
       cursor: pointer;
       margin-left: 15px;
-      color: darken(#fff, 5%);
+      /* color: darken(#fff, 5%); */
       user-select: none;
+      color: rgba(0, 0, 0, 0.6);
+      font-size: 18px;
       &:hover {
-        color: #fff;
+        /* color: #fff; */
+        color: rgba(0, 0, 0, 0.9)
       }
     }
   }
@@ -80,7 +88,8 @@
     background: #fff;
     z-index: 2;
     border-left: 1px solid rgba(0, 0, 0, 0.1);
-    /* box-shadow: -1px 3px 3px rgba(0, 0, 0, 0.2); */
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: -1px 3px 3px rgba(0, 0, 0, 0.2);
   }
   .gm-editor-status {
     position: absolute;
@@ -117,7 +126,7 @@
 </style>
 <main>
   <header >
-    <h1>
+    <h1 class="title is-4">
       {#if isEditing } 
         <input type="text" bind:value={title} class="gm-title-input" />
       {:else}
@@ -129,7 +138,7 @@
         <!-- <button class="button is-black is-small">publish</button>     -->
         <PublishBtn value={postStatus} {isSending} {isPublishing} {publishedTime} on:openToggle={publishPanelToggle} on:doPublish={doPublish}/>
         <span class="icon gm-icon" on:click={configToggle}>
-          <i class="fas fa-cog"></i>
+          <i class="far fa-compass"></i>
         </span>
       {:else if canEdit}
         <!-- <button class="button is-small" on:click={doEdit}>Edit</button> -->
@@ -212,7 +221,7 @@
   $: isSending = $postDetail  && $postDetail.isSending;
   $: isConfiging = $postDetail  && $postDetail.isConfiging;
   $: isPublishing = $postDetail  && $postDetail.isPublishing;
-  $: configPageStyle = `width:${configWidth}px;right: ${isConfiging ? 0:-configWidth}px`
+  $: configPageStyle = `width:${configWidth}px;right: ${isConfiging ? 0:-configWidth - 10}px`
   $: postStatus = selectedPost ? selectedPost.status : 'draft';
   $: isDraft = !selectedPost || $ghostApiService && selectedPost.status === $ghostApiService.postStatus.draft ;
   // $: isScheduled = selectedPost && $ghostApiService && selectedPost.status === $ghostApiService.postStatus.scheduled ;
@@ -262,7 +271,7 @@
     saveOrPublishWithDebounce()
   }
   async function doPublish(e) {
-    if (!$ghostApiService) {return}
+    if (!$ghostApiService.hasApi) {return}
     try {
       const {status, time, changed} = e.detail;
       console.log('---doPublish---', status, time, changed)
@@ -413,7 +422,7 @@
   async function fileUploadFun(file) {
     console.log('---fileUploadFun---', file)
     let url = '';
-    if ($ghostApiService) {
+    if ($ghostApiService.hasApi) {
       url = await $ghostApiService.uploadImg(file);
       console.log('---fileUploadFun upload ---', url)
     }

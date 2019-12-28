@@ -27,7 +27,7 @@
   import ImgUploader from './postConfig/ImgUploader.svelte'
   import PostSlug from './postConfig/PostSlug.svelte'
   import PostVisibility from './postConfig/PostVisibility.svelte'
-  import { ghostApiService, postDetail } from '@store'
+  import { postDetail } from '@store'
   import { createEventDispatcher, tick } from 'svelte';
   const dispatch = createEventDispatcher();
   $: post = $postDetail ? $postDetail.post : null;
