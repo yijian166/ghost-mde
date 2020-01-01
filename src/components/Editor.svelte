@@ -1,4 +1,4 @@
-<style global src="./editor.css">
+<style global type="text/less" src="./editor.less">
 </style>
 <div class="md-editor" bind:this={editorBoxElement}>
   <textarea bind:this={textAreaElement} />

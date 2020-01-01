@@ -44,12 +44,13 @@
 
   $: {
     if(show && canEsc && !noCancel) {
+      // console.warn('---doesc---')
       document.addEventListener('keyup', doEsc) 
     }
   }
 
   function doEsc(e) {
-    console.log('---doesc---',e)
+    // console.log('---doesc---',e)
     if (e.keyCode === 27) {
       //esc
       document.removeEventListener('keyup', doEsc)

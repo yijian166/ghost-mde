@@ -53,6 +53,9 @@
     z-index: 1;
     /* border-right: 1px solid #bbb; */
   }
+  .gm-post-p {
+    min-height: 24px;
+  }
   .gm-post-isloading {
     position: absolute;
     top: 50px;
@@ -181,7 +184,7 @@
       {#each list as post}
         <li on:click="{() => selectPost(post)}" class:active={selectedPostId === post.id}>
           <h5 class="title is-6">{post.title}</h5>
-          <p>{post.excerpt}</p>
+          <p class="gm-post-p">{post.excerpt || ''}</p>
           <!-- ellipsis-v -->
           <div class="gm-post-others">
             <span 

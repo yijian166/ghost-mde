@@ -1,5 +1,6 @@
 {
-  "name": "svelte-app",
+  "name": "ghost-mde",
+  "description": "Write your Ghost post with Markdown Editor",
   "version": "1.0.0",
   "devDependencies": {
     "@babel/core": "^7.7.7",

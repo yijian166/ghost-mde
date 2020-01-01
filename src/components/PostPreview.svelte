@@ -41,11 +41,33 @@ article {
   & > ol {
     margin-bottom: 10px;
   }
+
+  img {
+    max-width: 100%;
+    
+  }
+  em {
+    font-style: italic!important;
+  }
+  b, 
+  strong {
+    font-weight: bolder!important;
+  }
+  p {
+    margin-bottom: 15px;
+  }
+
+  blockquote {
+    padding: 0 1rem;
+    margin-left: 0;
+    color: #819198;
+    border-left: .3rem solid #dce6f0;
+  }
 }
 
 </style>
 <div class="gm-html-box">
   <article>
-    {@html $$props.postHTML }
+    {@html $$props.postHTML || '' }
   </article>
 </div>
