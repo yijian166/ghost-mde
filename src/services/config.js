@@ -1,3 +1,7 @@
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+dayjs.extend(utc);
+
 export const ISDEV = !__buildEnvIsProduction__;
 export const EditorSaveInterval = 1000 * 3; //TODO: chenge to 30
 
@@ -44,4 +48,12 @@ export const handlePost = item => {
   item.markdown = markdown;
   item.supportMd = supportMd;
   return item;
+}
+
+export const getCurrentUtcString = st => {
+  return dayjs(st).utc().format()
+}
+
+export const getDatetimeLocal = st => {
+  return dayjs(st).format("YYYY-MM-DDTHH:mm");
 }

@@ -84,7 +84,7 @@
 <script>
   import { ghostApiService, postDetail, postList, quitEdit } from '@store'
   import { createEventDispatcher, afterUpdate, onDestroy, beforeUpdate } from 'svelte';
-  import {PostStatus} from '@config'
+  import { PostStatus, getCurrentUtcString, getDatetimeLocal } from '@config'
   const dispatch = createEventDispatcher();
   let value = '';
   let time = '';
@@ -113,36 +113,37 @@
     }
   }
 
-  Date.prototype.toDatetimeLocal = function toDatetimeLocal() {
-    var
-      date = this,
-      ten = function (i) {
-        return (i < 10 ? '0' : '') + i;
-      },
-      YYYY = date.getFullYear(),
-      MM = ten(date.getMonth() + 1),
-      DD = ten(date.getDate()),
-      HH = ten(date.getHours()),
-      II = ten(date.getMinutes()),
-      SS = ten(date.getSeconds())
-    ;
-    return YYYY + '-' + MM + '-' + DD + 'T' +
-            HH + ':' + II + ':' + SS;
-  };
+  // Date.prototype.toDatetimeLocal = function toDatetimeLocal() {
+  //   // return this.toUTCString()
+  //   var
+  //     date = this,
+  //     ten = function (i) {
+  //       return (i < 10 ? '0' : '') + i;
+  //     },
+  //     YYYY = date.getFullYear(),
+  //     MM = ten(date.getMonth() + 1),
+  //     DD = ten(date.getDate()),
+  //     HH = ten(date.getHours()),
+  //     II = ten(date.getMinutes()),
+  //     SS = ten(date.getSeconds())
+  //   ;
+  //   return YYYY + '-' + MM + '-' + DD + 'T' +
+  //           HH + ':' + II + ':' + SS;
+  // };
 
-  Date.prototype.fromDatetimeLocal = (function (BST) {
-    // BST should not be present as UTC time
-    return new Date(BST).toISOString().slice(0, 16) === BST ?
-      // if it is, it needs to be removed
-      function () {
-        return new Date(
-          this.getTime() +
-          (this.getTimezoneOffset() * 60000)
-        ).toISOString();
-      } :
-      // otherwise can just be equivalent of toISOString
-      Date.prototype.toISOString;
-  }('2006-06-06T06:06'));
+  // Date.prototype.fromDatetimeLocal = (function (BST) {
+  //   // BST should not be present as UTC time
+  //   return new Date(BST).toISOString().slice(0, 16) === BST ?
+  //     // if it is, it needs to be removed
+  //     function () {
+  //       return new Date(
+  //         this.getTime() +
+  //         (this.getTimezoneOffset() * 60000)
+  //       ).toISOString();
+  //     } :
+  //     // otherwise can just be equivalent of toISOString
+  //     Date.prototype.toISOString;
+  // }('2006-06-06T06:06'));
 
 
   function publishPanelOpen() {
@@ -155,7 +156,8 @@
   }
   async function doPublish() {
     console.log('---btn doPublish--', oldStatus, value, time)
-    dispatch('doPublish', {status: value, time, changed: value !== oldStatus})
+    const _time = time || getDatetimeLocal()
+    dispatch('doPublish', {status: value, time: _time, changed: value !== oldStatus})
   }
 
   async function doQuitEdit() {
@@ -184,9 +186,9 @@
     }
     if (isPublishing && !time) {
       if (isDraft) {
-        time  = new Date().toDatetimeLocal()
+        time  = getDatetimeLocal()
       }else if (isScheduled && $$props.publishedTime) {
-        time = new Date($$props.publishedTime).toDatetimeLocal()
+        time = getDatetimeLocal($$props.publishedTime) //new Date($$props.publishedTime).toDatetimeLocal()
       }
     }
     

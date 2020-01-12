@@ -212,9 +212,9 @@
     </ul>
     <div class="gm-footer">
       {#if hasMore}
-        <button class="button is-white" class:is-loading={isLoading} on:click={doLoadMore}>Load More</button>
+        <button class="button is-white" class:is-loading={isLoading} on:click={doLoadMore}>load more</button>
       {:else if list.length > 0}
-        <button class="button is-white" disabled>No More</button>
+        <button class="button is-white" disabled>no more</button>
       {/if}
     </div>
   </div>
@@ -234,7 +234,7 @@
   $: selectedPostId = $postDetail ? $postDetail.post ? $postDetail.post.id:'':'';
   $: postStatus = $ghostApiService ? $ghostApiService.postStatus : {};
   $: hasBlog = $ghostApiService && $ghostApiService.hasApi;
-  $: blogUrl = hasBlog ? $ghostApiService.blogConfig.url.replace(/https:\/\/|http:\/\//, ''): ''
+  $: blogUrl = hasBlog ? $ghostApiService.blogConfig.showUrl: ''
 
   function showIsEditor() {
     quitEdit(false)

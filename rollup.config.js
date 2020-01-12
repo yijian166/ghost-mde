@@ -36,9 +36,9 @@ export default {
 			dev: !production,
 			// we'll extract any component CSS out into
 			// a separate file  better for performance
-			// css: css => {
-			// 	css.write('public/bundle.css');
-			// }
+			css: css => {
+				css.write('public/main.css');
+			}
 		}),
 
 		// babel({
@@ -67,20 +67,20 @@ export default {
 
 		// In dev mode, call `npm run start:dev` once
 		// the bundle has been generated
-		// !production && rollup_start_dev,
+		!production && rollup_start_dev,
 
 		// Watch the `public` directory and refresh the
 		// browser on changes when not in production
-		// !production && livereload('public'),
+		!production && livereload('public'),
 
-		dev({ 
-			proxy: { '/ghost/*': [
-				'https://hicc.me/ghost/', 
-				{ https: true }
-				] 
-			} ,
-			dirs: ['dist', 'lib','public'] 
-		}),
+		// dev({ 
+		// 	proxy: { '/ghost/*': [
+		// 		'https://hicc.me/ghost/', 
+		// 		{ https: true }
+		// 		] 
+		// 	} ,
+		// 	dirs: ['dist', 'lib','public'] 
+		// }),
 
 		// If we're building for production (npm run build
 		// instead of npm run dev), minify

@@ -1,5 +1,5 @@
 import request from '@request';
-import {PostStatus, handlePost} from '@config'
+import {PostStatus, handlePost, getCurrentUtcString} from '@config'
 // import moment from 'moment'
 // import dayjs from 'dayjs'
 // import utc from 'dayjs/plugin/utc'
@@ -37,6 +37,10 @@ export class BlogConfigInfo {
 
 	get hasConfig() {
 		return this.url && this.key;
+	}
+
+	get showUrl() {
+		return this.url.replace(/https:\/\/|http:\/\//, '');
 	}
 	
 }
@@ -87,7 +91,8 @@ export default class GhostAdminApi {
 				url += `/${post.id}`;
 				method = 'PUT';
 				// const time = new Date().toISOString();
-				// post.updated_at = time.slice(0, time.lastIndexOf('.')) + '.000Z'
+				console.log('---savePost---', post.updated_at)
+				// post.updated_at = getCurrentUtcString(post.updated_at)
 			}else {
 				delete post.updated_at
 			}

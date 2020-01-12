@@ -1,10 +1,15 @@
 import { writable, get, derived,readable } from 'svelte/store';
 import { tick } from 'svelte';
 import GhostAdminApi, { BlogConfigInfo } from '@api';
+import { EditorSaveInterval, handlePost } from '@config';
+import pick from 'lodash/pick';
+import { PostStatus } from './config';
 
+export const editor = writable();
 export const blogConfig = writable(new BlogConfigInfo());
 export const ghostApiService = derived(blogConfig, ($blogConfig, set) => {
   console.warn('---blogConfig changed--', $blogConfig.hasConfig)
+  document.title = `Ghost-MDE ${($blogConfig.showUrl || '')}`
   set(new GhostAdminApi(new BlogConfigInfo($blogConfig.url, $blogConfig.key)))
 }, new GhostAdminApi(new BlogConfigInfo()));
 
@@ -38,6 +43,11 @@ export const message = writable({});
 export const quitEdit = (useQuit = true) => {
   return new Promise((resolve) => {
     const _postDetal = get(postDetail)
+    if (_postDetal && _postDetal.post && _postDetal.post.status === PostStatus.draft) {
+      saveOrPublish()// draft 状态的退出后直接保存文章
+      resolve(true);
+      return 
+    }
     if (!_postDetal || !_postDetal.isEditing) {
       resolve(true);
       return
@@ -58,5 +68,93 @@ export const quitEdit = (useQuit = true) => {
       }
     })
   })
-  
+}
+
+export const supportEditKeys = ['id', 'feature_image', 'slug', 'updated_at', 'status','visibility']
+
+export async function saveOrPublish(toStatus, published_at) {
+  let newPost;
+  const _postDetail = get(postDetail);
+  const _ghostApiService = get(ghostApiService);
+  const _editor = get(editor)
+  const selectedPost = _postDetail ? _postDetail.post : null;
+  const isEditing = _postDetail && _postDetail.isEditing;
+  const title = selectedPost ? selectedPost.title : '';
+  try {
+    if (!_editor || !isEditing || (selectedPost && selectedPost.status === _ghostApiService.postStatus.scheduled && !published_at)) {
+      return;
+    }
+    postDetail.update(data => {
+      return {
+        ...data,
+        isSending:true,
+      }
+    })
+    const md = _editor.value();
+    const status = toStatus ? toStatus : (selectedPost || {}).status || _ghostApiService.postStatus.draft;
+    const post = {
+      title,
+      ...pick(selectedPost || {}, supportEditKeys),
+      status,
+      ...(status === _ghostApiService.postStatus.scheduled ? {published_at: new Date(published_at)}:{}) // scheduled 情况下， published_at 应该需要存在
+    }
+    console.log('---saveOrPublish start api call----',post)
+    const data = await _ghostApiService.savePost(post, md);
+    newPost = handlePost(data);
+    
+    postList.update(postListData => {
+      const list = selectedPost && selectedPost.id ? postListData.list.map(item => {
+        if (item.id === newPost.id) {
+          return newPost
+        }
+        return {...item}
+      }):  [newPost,...postListData.list]
+      console.log('---postList.update---', list)
+      
+      return {
+        ...postListData,
+        list
+      }
+    })
+    console.log('---saveOrPublish---', newPost, newPost.updated_at);
+    return newPost;
+  } catch (error) {
+    // TODO: 处理接口失败的情况
+    console.log('---saveOrPublish error---', error);
+    let code = ''
+    let msg = 'post save failed'
+    if (Array.isArray(error) && error.length > 0) {
+      code = error[0].code;
+      msg = error[0].message;
+    }
+    message.set({
+      body: msg,
+      type: 'danger'
+    })
+
+    // 409 Conflict code === "UPDATE_COLLISION"
+    // 1. 每次更新的时候，传的是上次拿到的updated_at time
+    // 2. 如果接口冲突说明，说明别人比你拿到了更新的server端 updated_at time 这样也就是冲突了
+    // 3. 提示用户推出编辑，拉取一封最新的post信息
+    // 4. 因此这里是实际上是一种抢占式的，防冲突策略
+  } finally {
+    postDetail.update(value => {
+      const ob = {}
+      if (newPost) {
+        if(selectedPost) {
+          ob.post = newPost
+        } else {
+          ob.post = {
+            ...value.post,
+            ...pick(newPost, supportEditKeys.concat(['html']))
+          }
+        }
+      }
+      return {
+        ...value,
+        isSending:false,
+        ...ob
+      }
+    });
+  }
 }

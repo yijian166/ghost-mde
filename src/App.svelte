@@ -5,7 +5,6 @@
 		flex-direction: column;
 	}
 </style>
-
 <div class="gm-container">
 	<Container />
 	<BlogConfig show={showBlogConfigModal} {reConfig}/>

@@ -1,6 +1,6 @@
 export const getData = (key, isAsync = false) => {
   return new Promise((resolve, reject) => {
-    if (!chrome) { 
+    if (!chrome || !chrome.storage) { 
       resolve({isOk:false, msg: 'Not in chrome extension'})
      }
     (isAsync ? chrome.storage.sync : chrome.storage.local).get([key], function(result) {
