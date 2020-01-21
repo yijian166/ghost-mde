@@ -73,7 +73,8 @@ export default {
 		// browser on changes when not in production
 		!production && livereload('public'),
 
-		// dev({ 
+		// !production && dev({ 
+		// 	port: 5000,
 		// 	proxy: { '/ghost/*': [
 		// 		'https://hicc.me/ghost/', 
 		// 		{ https: true }

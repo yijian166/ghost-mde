@@ -31,6 +31,16 @@ export const postList = writable({
   page: 1,
   limit: 20
 });
+const tagRefreshToken = writable(0);
+export const tagList = derived([ghostApiService,tagRefreshToken], async ([$api],set) => {
+  if (!$api || !$api.hasApi) {
+    return set({list:[]})
+  } else {
+    const list = await $api.getTags()
+    set({list});
+  }
+}, {list: []});
+
 
 // 这里使用对象，而不是字符串，
 // 是为了避免两次同时打开一个文章但是store不触发的问题（因为Svelte，store特性，会过滤相同值)
@@ -70,7 +80,7 @@ export const quitEdit = (useQuit = true) => {
   })
 }
 
-export const supportEditKeys = ['id', 'feature_image', 'slug', 'updated_at', 'status','visibility']
+export const supportEditKeys = ['id', 'feature_image', 'slug', 'updated_at', 'status','visibility','tags']
 
 export async function saveOrPublish(toStatus, published_at) {
   let newPost;
@@ -90,6 +100,13 @@ export async function saveOrPublish(toStatus, published_at) {
         isSending:true,
       }
     })
+    if (Array.isArray(selectedPost.tags)) {
+      const hasNewTag = selectedPost.tags.some(item => typeof item.id === 'symbol');
+      if (hasNewTag) {
+        console.log('---tagRefreshToken update---')
+        tagRefreshToken.update(token=>token + 1)
+      }
+    }
     const md = _editor.value();
     const status = toStatus ? toStatus : (selectedPost || {}).status || _ghostApiService.postStatus.draft;
     const post = {

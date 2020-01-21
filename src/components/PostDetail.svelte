@@ -178,7 +178,6 @@
       {/if}
     </div>
 
-
     <div class="gm-editor-status">
       <div class="gm-editor-status-left">
         {#if isEditing } 
@@ -219,7 +218,6 @@
   import { ghostApiService, postDetail, postList, editorInitValue, message, blogConfig, saveOrPublish, editor } from '@store'
   import { EditorSaveInterval, handlePost } from '@config';
   import debounce from 'lodash/debounce';
- 
 
   // const postType = "scheduled" | "published" | "draft"
   // 编辑与否

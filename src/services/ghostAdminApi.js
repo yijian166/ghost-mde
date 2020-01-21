@@ -71,6 +71,14 @@ export default class GhostAdminApi {
 				posts: (Array.isArray(posts) ? posts: []).map(item => handlePost(item))
 			};
 	}
+	
+	async getTags() {
+		const { tags, meta: {pagination} } = await request('tags', this.blogConfig, {method: 'GET', params:{
+			limit:'all'
+		}})
+
+		return tags;
+	}
 
 	async delPost(id) {
 		try {
@@ -102,6 +110,14 @@ export default class GhostAdminApi {
 			}
 			if (!post.title) {
 				post.title = "(Untitled)"
+			}
+
+			if (Array.isArray(post.tags)) {
+				post.tags.forEach(item => {
+					if (typeof item.id === 'symbol') {
+						delete item.id;
+					}
+				});
 			}
 			
 			const mobiledoc = {

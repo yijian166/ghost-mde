@@ -21,6 +21,9 @@
   <div class="gm-post-config-item">
     <PostVisibility {visibility} on:change={e => onInputChange('visibility', e.detail)}/>
   </div>
+  <div class="gm-post-config-item">
+    <PostTags {tags} on:change={e => onInputChange('tags', e.detail)}/>
+  </div>
   
 </div>
 <script>
@@ -29,10 +32,12 @@
   import PostVisibility from './postConfig/PostVisibility.svelte'
   import { postDetail } from '@store'
   import { createEventDispatcher, tick } from 'svelte';
+  import PostTags from './postConfig/PostTags.svelte'
   const dispatch = createEventDispatcher();
   $: post = $postDetail ? $postDetail.post : null;
   $: feature_image = post ? (post.feature_image || ''): '';
   $: slug = post ? (post.slug || ''): '';
+  $: tags = post ? (post.tags || []): [];
   $: visibility = post ? (post.visibility || 'public'): 'public';
 
   async function onInputChange(key, value) {
