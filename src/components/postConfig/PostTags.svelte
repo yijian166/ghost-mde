@@ -18,7 +18,7 @@
 <InputBox label={'Tags'}>
   <div class="gme-box" on:click|stopPropagation={focusInput}>
     {#each tags as tag}
-      <span class="tag is-warning">
+      <span class="tag is-primary">
         {tag.name}
         <button class="delete is-small" on:click|stopPropagation={() => rmTag(tag.id)}></button>
       </span>

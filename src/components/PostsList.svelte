@@ -56,7 +56,22 @@
   .gm-post-p {
     min-height: 24px;
   }
-  .gm-post-isloading {
+  .gm-post-refresh {
+    /* color: #333; */
+    background-color: transparent;
+    .icon {
+      color: rgb(179, 179, 179)
+    }
+
+    outline: none;
+
+    &:focus {
+      box-shadow: none;
+    }
+  }
+  .gm-post-isloading,
+  .gm-post-refresh {
+    width: 50px;
     position: absolute;
     top: 50px;
     /* left: 0; */
@@ -177,9 +192,14 @@
   {/if}
   {#if isLoading}
     <button class="gm-post-isloading button is-loading">Loading</button>
+  {:else}
+    <button class="gm-post-refresh button" on:click={refreshPost}>
+      <span class="icon">
+        <i class="fas fa-sync-alt"></i>
+      </span>
+    </button>
   {/if}
   <div class="gm-post-list">
-
     <ul>
       {#each list as post}
         <li on:click="{() => selectPost(post)}" class:active={selectedPostId === post.id}>
@@ -331,6 +351,11 @@
     const {page, limit} = get(postList);
     getList(api, page, limit)
   });
+
+  function refreshPost() {
+    const {page, limit} = get(postList);
+    getList($ghostApiService, 1, limit)
+  }
 
   function del(post) {
     confirmModal.set({
