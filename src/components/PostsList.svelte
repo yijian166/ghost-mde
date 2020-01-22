@@ -73,7 +73,8 @@
   .gm-post-refresh {
     width: 50px;
     position: absolute;
-    top: 50px;
+    padding-top: 0;
+    top: 60px;
     /* left: 0; */
     right: 0;
     /* height: 30px;
@@ -144,6 +145,7 @@
     justify-content: center;
     height: 40px;
     padding-bottom: 30px;
+    font-size: 12px;
   }
   .gm-post-others {
     display: flex;
@@ -174,6 +176,14 @@
       background-color: darken(#3298dc, 5%);
     }
   }
+  .gm-post-filter {
+    margin-bottom: 10px;
+    margin-top: 10px;
+
+    .button {
+      margin-bottom: 0;
+    }
+  }
 </style>
 <aside>
   <h1 class="gm-haeder title is-5">
@@ -199,6 +209,32 @@
       </span>
     </button>
   {/if}
+  <div class="gm-post-filter buttons has-addons is-centered">
+    <button 
+      class="button is-small" 
+      class:is-info={postFilterStatus === ''}
+      class:is-selected={postFilterStatus === ''}
+      on:click={() => doFilterPost('')}
+    >
+      All
+    </button>
+    <button 
+      class="button is-small" 
+      class:is-success={postFilterStatus === 'Published'}
+      class:is-selected={postFilterStatus === 'Published'}
+      on:click={() => doFilterPost('Published')}
+    >
+      Published
+    </button>
+    <button 
+      class="button is-small" 
+      class:is-selected={postFilterStatus === 'Draft'}
+      class:is-is-danger={postFilterStatus === 'Draft'}
+      on:click={() => doFilterPost('Draft')}
+    >
+      Draft
+    </button>
+  </div>
   <div class="gm-post-list">
     <ul>
       {#each list as post}
@@ -241,6 +277,7 @@
 </aside>
 
 <script>
+  import { onMount } from 'svelte'
   import Box from './Box.svelte'
   import { initPostDetail, postDetail, postList, ghostApiService, confirmModal, message,  quitEdit, blogConfig} from '@store';
   import { BlogConfigInfo } from '@api';
@@ -254,7 +291,23 @@
   $: selectedPostId = $postDetail ? $postDetail.post ? $postDetail.post.id:'':'';
   $: postStatus = $ghostApiService ? $ghostApiService.postStatus : {};
   $: hasBlog = $ghostApiService && $ghostApiService.hasApi;
-  $: blogUrl = hasBlog ? $ghostApiService.blogConfig.showUrl: ''
+  $: blogUrl = hasBlog ? $ghostApiService.blogConfig.showUrl: '';
+
+  let postFilterStatus = '';
+
+  onMount(async () => {
+    const status = await getData('postFilterStatus');
+    postFilterStatus = status.isOk ? status.data : '';
+    console.log('---postFilterStatus---', status)
+  })
+
+  async function doFilterPost(status) {
+    postFilterStatus = status;
+    const {page, limit} = get(postList);
+    getList($ghostApiService, 1, limit, false, status)
+    await saveData('postFilterStatus', status);
+  }
+
 
   function showIsEditor() {
     quitEdit(false)
@@ -305,7 +358,7 @@
     getList($ghostApiService, page+1, limit, true)
   }
 
-  async function getList(api, page, limit, loadMore = false) {
+  async function getList(api, page, limit, loadMore = false, toPublishStatus) {
     console.log('---ghostApiService has value--', api.hasApi)
     if (!api.hasApi) {
       // no api get list form chrome storage
@@ -327,7 +380,7 @@
           isLoading: true,
         }
       });
-      const { posts, total } = await api.getPosts(page, limit);
+      const { posts, total } = await api.getPosts(page, limit, toPublishStatus || postFilterStatus);
       if (page === 1) {
         // cache first page
         await saveData('postList', {posts, total})

@@ -61,10 +61,13 @@ export default class GhostAdminApi {
 		return data;
 	}
 
-	async getPosts(page, limit) {
+	async getPosts(page, limit, publishType) {
 			const { posts, meta: {pagination} } = await request('posts', this.blogConfig, {method: 'GET', params:{
 				formats: ['html', 'mobiledoc'],
-				page, limit
+				page, limit,
+				...(publishType ? {
+					filter: `status:${publishType.toLowerCase()}`
+				}:{})
 			}})
 			return {
 				...pagination,

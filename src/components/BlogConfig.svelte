@@ -13,7 +13,7 @@
 >
   <div>
     <div class="field">
-      <label class="label">Blog Url</label>
+      <label class="label">Blog Url <span style="font-size:12px">only support Ghost 3.x</span></label>
       <div class="control">
         <input class="input" type="text" placeholder="http://youblog.com" bind:value={url}>
       </div>
