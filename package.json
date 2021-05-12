@@ -28,7 +28,7 @@
   "dependencies": {
     "@tryghost/admin-api": "^1.0.0",
     "bulma": "^0.8.0",
-    "codemirror": "^5.49.2",
+    "codemirror": "^5.58.2",
     "dayjs": "^1.8.19",
     "jsrsasign": "^8.0.12",
     "lodash": "^4.17.15",
