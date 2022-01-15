@@ -32,7 +32,7 @@
     "dayjs": "^1.8.19",
     "jsrsasign": "^8.0.12",
     "lodash": "^4.17.15",
-    "marked": "^0.8.0",
+    "marked": "^4.0.10",
     "simplemde": "^1.11.2",
     "sirv-cli": "^0.4.4"
   },
