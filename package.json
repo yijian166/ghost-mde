@@ -30,7 +30,7 @@
     "bulma": "^0.8.0",
     "codemirror": "^5.49.2",
     "dayjs": "^1.8.19",
-    "jsrsasign": "^8.0.12",
+    "jsrsasign": "^10.5.25",
     "lodash": "^4.17.15",
     "marked": "^0.8.0",
     "simplemde": "^1.11.2",
